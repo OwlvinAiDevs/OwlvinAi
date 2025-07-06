@@ -12,7 +12,7 @@ class Task(BaseModel):
     category: Optional[str] = None
 
     def __repr__(self):
-        return f"Task(title={self.title}, duration={self.duration_minutes} min, due={self.due_date()}, category={self.category})"
+        return f"Task(title={self.title}, duration={self.duration_minutes} min, due={self.due_date}, category={self.category})"
 
 class TimeSlot(BaseModel):
     """Represents an available block of time for scheduling study sessions."""

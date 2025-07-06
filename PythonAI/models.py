@@ -4,7 +4,7 @@ from typing import List, Optional
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship, declarative_base
 
-class Task(BaseModel):
+class TaskSchema(BaseModel):
     """A study task with required time, deadline, and optional category."""
     title: str
     due_date: datetime
@@ -37,7 +37,7 @@ class StudyRequest(BaseModel):
     energy_level: List[int]
     pomodoro_length: Optional[int] = 25
     available_slots: List[TimeSlot]
-    tasks: List[Task]
+    tasks: List[TaskSchema]
 
 class Session(BaseModel):
     """
@@ -49,7 +49,7 @@ class Session(BaseModel):
         end_time: End timestamp of the session.
         break_after: Suggested break duration after the session in minutes.
     """
-    task: Task
+    task: TaskSchema
     start_time: datetime
     end_time: datetime
     break_after: Optional[int] = 5 # Default break time after each session in minutes
@@ -91,7 +91,7 @@ class User(Base):
     tasks = relationship("Task", back_populates="user")
     notes = relationship("Note", back_populates="user")
 
-class Task(Base):
+class TaskSchema(Base):
     __tablename__ = 'tasks'
     id = Column(Integer, primary_key=True)
     title = Column(String)

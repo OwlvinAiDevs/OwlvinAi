@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from pydantic import BaseModel
 from typing import List, Optional
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text
@@ -12,7 +12,7 @@ class TaskSchema(BaseModel):
     category: Optional[str] = None
 
     def __repr__(self):
-        return f"Task(title={self.title}, duration={self.duration_minutes} min, due={self.due_date}, category={self.category})"
+        return f"Task(title={self.title}, duration={self.duration_minutes} min, due={self.due_date()}, category={self.category})"
 
 class TimeSlot(BaseModel):
     """Represents an available block of time for scheduling study sessions."""
@@ -86,7 +86,7 @@ class User(Base):
     username = Column(String)
     email = Column(String, unique=True)
     auth_provider = Column(String)
-    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+    date_created = Column(DateTime, default=datetime.utcnow)
 
     tasks = relationship("Task", back_populates="user")
     notes = relationship("Note", back_populates="user")

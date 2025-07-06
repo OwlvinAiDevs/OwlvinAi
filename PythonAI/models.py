@@ -1,6 +1,9 @@
+import datetime
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy.orm import relationship, declarative_base
 
 class Task(BaseModel):
     """A study task with required time, deadline, and optional category."""

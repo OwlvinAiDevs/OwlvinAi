@@ -2,7 +2,7 @@
   <img src="docs/studybuddy_logo.png" alt="StudyBuddy Logo" width="200" />
 </p>
 
-<h1 align="center">StudyBuddy AI</h1>
+<h1 align="center">OwlvinAI</h1>
 
 <p align="center">
   Your intelligent study companion — powered by Unity and AI.
@@ -21,26 +21,30 @@
 
 ## 📚 About the Project
 
-**StudyBuddy AI** is a cross-platform productivity app that combines the power of Unity with a Python-based AI backend. Designed to support students with adaptive study schedules, task reminders, and break recommendations, the goal is to provide a lightweight but smart personal study assistant.
+**OwlvinAI** is a cross-platform productivity app designed to help students manage their time more effectively. By combining Unity with a Python-based AI backend, the app generates personalized study schedules and provides smart reminders, making it easier to stay organized and productive.
 
-This project is part of a collaborative development effort and is currently under active development.
+This project is a team-led capstone initiative and is currently in **Alpha development**.
 
-## 🚀 Features (Planned & In Progress)
+## 🚀 Core Features (Alpha Milestone)
 
-- AI-generated study schedules based on deadlines and energy levels
-- Adaptive Pomodoro timers with smart break reminders
-- Visual task timeline and calendar views
-- Continuous habit tracking and personalized feedback
+- **Homepage Dashboard** – See upcoming study sessions at a glance
+- **Navigation UI** – Easy access to Calendar, Timer, and Settings
+- **Calendar View** – Visual schedule of upcoming study tasks and sessions
+- **Alarm Clock / Pomodoro Timer** – Study sessions with work/break intervals
+- **AI-Generated Study Schedules** – Working JSON-based schedule via backend
 
-## ⚙ Technologies
-- Unity
-- C# 
-- Python backend integration using FastAPI and uvicorn
+## ⚙ Technologies Used
 
-## 🛠️ Installation
+- **Frontend:** Unity 2022.3 (C#), Unity UI Toolkit
+- **Backend:** Python 3.8+, FastAPI (deployed on [Render](https://studybuddy-api-w8g5.onrender.com))
+- **Communication:** UnityWebRequest (HTTP)
+- **Data:** Local storage via PlayerPrefs (planned Firebase)
+- **Design:** Figma wireframes
 
-- Download the Build folder from the OneDrive or the GitHub
-- Run the exe file inside for the current runnable build
+## 🛠️ Installation (Users)
+
+1. Download the latest build from GitHub
+2. Run `StudyBuddy.exe` in the Build folder to launch the app
 
 ## Development Setup
 
@@ -51,30 +55,21 @@ git clone https://github.com/StuddyBuddyAi/StuddyBuddy.git
 cd StuddyBuddy
 ```
 
-### Python Backend Setup
+## 👨‍💻 Unity Setup for Developers
 
-Please follow the full backend setup guide here:
-📄 [docs/setup-python-backend.md](docs/setup-python-backend.md)
+- Open the project in Unity Hub
+- Load the `LLMAi` scene
+- Press Play — Unity will contact the deployed backend via public endpoints:
+  - `https://studybuddy-api-w8g5.onrender.com/ping` → should return `{"message":"pong"}`
+  - `https://studybuddy-api-w8g5.onrender.com/generate_ai_schedule` → returns mock schedule JSON
 
-Steps include:
-- Creating and activating a Python ```venv```
-- Installing dependencies with ```pip```
-- Running the FastAPI server (```uvicorn app:app --reload```)
-- Testing the ```/ping``` endpoint from Unity
-
-### Unity Setup
-
-- Open the project folder via Unity Hub
-- Load the test scene and press Play
-- Use the PingTester.cs script to verify server communication
-
-Make sure the Python server is running locally before entering Play mode.
+The backend source code still lives in `/PythonAI/` if future updates or changes are needed.
 
 ## 🤝 Contribution
 
 We welcome contributions once the core system is stabilized. For now, teammates should:
 
-- Use feature branches (e.g. feature/SCRUM-###-pomodoro-ui) <-- SCRUM ID based on task in Jira Board
+- Use Jira task IDs in your branch names (e.g. `SCRUM-185-ui-navigation`)
 - Submit pull requests with clear descriptions
 - Follow our style tile for UI consistency
 
@@ -90,16 +85,28 @@ This project is currently shared within the scope of a team project and is not y
 - [Michael Nathan Belisaire](https://github.com/SoldierTaker)
 - [Nathaniel McCleery](https://github.com/nate254347)
 
-## 🧪 Current Project Status : Pre-Alpha stage
+## 🧪 Current Project Status : Beta Build
 
-| Component             | Status                        |
-| --------------------- | ----------------------------- |
-| Python API Server     | ✅ Ping endpoint working       |
-| Unity HTTP Connection | ✅ Working via UnityWebRequest |
-| AI Schedule Stub      | 🔧 In development             |
-| Calendar              | ⏳ Planned                    |
-| Scheduling            | ⏳ Planned                     |
-| AI Time Slot Selection (LLM)        | ⏳ Planned                     |
+| Component             | Status                          |
+|-----------------------|----------------------------------|
+| Ai Calendar Notes         | 🔧 Under integration            |
+| Ai Chat Logs          | 🔧 Under integration            |
+| Pomodoro Timer        | ✅ UI functional, backend Under integration    |
+| Custom Ai Promting       | 🔧 Under integration          |
+| Variable amount of daily notes | 🔧 Under integration          |
+| Google Calendat sync  | 🔧 Under integration          |
+
+
+## 🧪 Previous Project Status : Alpha Build
+
+| Component             | Status                          |
+|-----------------------|----------------------------------|
+| Homepage UI           | ✅ Implemented                   |
+| Navigation            | ✅ Implemented                   |
+| Pomodoro Timer        | ✅ UI functional, backend TBD     |
+| Calendar View         | 🔧 Under integration              |
+| AI Scheduling (Stub)  | ✅ JSON mock working              |
+| Unity ↔ Python Comm   | ✅ Using deployed Render server   |
 
 ## 🙌 Credits
 

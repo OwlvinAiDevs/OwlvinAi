@@ -77,3 +77,38 @@ class ScheduleResponse(BaseModel):
     success: bool = True
     message: Optional[str] = None
     warnings: Optional[List[str]] = []
+
+# SQLAlchemy ORM models for database representation
+Base = declarative_base()
+
+class User(Base):
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True)
+    username = Column(String)
+    email = Column(String, unique=True)
+    auth_provider = Column(String)
+    date_created = Column(DateTime, default=datetime.datetime.utcnow)
+
+    tasks = relationship("Task", back_populates="user")
+    notes = relationship("Note", back_populates="user")
+
+class Task(Base):
+    __tablename__ = 'tasks'
+    id = Column(Integer, primary_key=True)
+    title = Column(String)
+    description = Column(Text)
+    due_date = Column(DateTime)
+    completed = Column(Boolean, default=False)
+    category = Column(String)
+    user_id = Column(Integer, ForeignKey('users.id'))
+
+    user = relationship("User", back_populates="tasks")
+
+class Note(Base):
+    __tablename__ = 'notes'
+    id = Column(Integer, primary_key=True)
+    content = Column(Text)
+    date = Column(DateTime)
+    user_id = Column(Integer, ForeignKey('users.id'))
+
+    user = relationship("User", back_populates="notes")

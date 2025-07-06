@@ -1,13 +1,23 @@
 import logging
-import asyncio
 from fastapi import FastAPI, HTTPException
+from contextlib import asynccontextmanager
 from ai_model import generate_schedule, format_schedule_prompt, call_openai_api
 from models import StudyRequest, ScheduleResponse
 from utils import parse_llm_response
+from database import init_db
 
 logging.basicConfig(level=logging.DEBUG)
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup code
+    logging.info("Starting up and initializing the database...")
+    init_db()
+    yield
+    # Shutdown code
+    logging.info("Shutting down...")
+
+app = FastAPI(lifespan=lifespan)
 
 @app.get("/ping")
 def ping():

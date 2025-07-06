@@ -91,7 +91,7 @@ class User(Base):
     tasks = relationship("Task", back_populates="user")
     notes = relationship("Note", back_populates="user")
 
-class TaskSchema(Base):
+class Task(Base):
     __tablename__ = 'tasks'
     id = Column(Integer, primary_key=True)
     title = Column(String)

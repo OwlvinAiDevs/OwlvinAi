@@ -1,7 +1,7 @@
 from datetime import datetime
 from pydantic import BaseModel
 from typing import List, Optional
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, UniqueConstraint
 from sqlalchemy.orm import relationship, declarative_base
 
 class TaskSchema(BaseModel):
@@ -96,6 +96,7 @@ class Task(Base):
     id = Column(Integer, primary_key=True)
     title = Column(String)
     description = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
     due_date = Column(DateTime)
     completed = Column(Boolean, default=False)
     category = Column(String)
@@ -107,7 +108,72 @@ class Note(Base):
     __tablename__ = 'notes'
     id = Column(Integer, primary_key=True)
     content = Column(Text)
-    date = Column(DateTime)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
     user_id = Column(Integer, ForeignKey('users.id'))
 
     user = relationship("User", back_populates="notes")
+
+class SessionLog(Base):
+    __tablename__ = 'session_logs'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    task_id = Column(Integer, ForeignKey('tasks.id'), nullable=True)
+    start_time = Column(DateTime, index=True)
+    end_time = Column(DateTime, index=True)
+    was_productive = Column(Boolean)
+
+    user = relationship("User", backref="session_logs")
+    task = relationship("Task", backref="session_logs")
+
+class EnergyLevel(Base):
+    __tablename__ = 'energy_levels'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+    level = Column(String)  # "low", "medium", "high"
+
+    user = relationship("User", backref="energy_levels")
+
+class CachedAvailability(Base):
+    __tablename__ = 'cached_availability'
+
+    __table_args__ = (
+        UniqueConstraint('user_id', 'start_time', 'end_time', name='uq_user_availability_time'),
+    )
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    start_time = Column(DateTime, index=True)
+    end_time = Column(DateTime, index=True)
+    source = Column(String, default="inferred")
+
+    user = relationship("User", backref="cached_availability")
+
+class BlockedTime(Base):
+    __tablename__ = 'blocked_times'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    start_time = Column(DateTime, index=True)
+    end_time = Column(DateTime, index=True)
+    reason = Column(String)
+
+    user = relationship("User", backref="blocked_times")
+
+class AIResponse(Base):
+    __tablename__ = 'ai_responses'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+    response_json = Column(Text)
+
+    user = relationship("User", backref="ai_responses")
+
+class AIChatLog(Base):
+    __tablename__ = 'ai_chat_logs'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+    role = Column(String)  # "user" or "assistant"
+    message = Column(Text)
+
+    user = relationship("User", backref="ai_chat_logs")

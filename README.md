@@ -94,7 +94,7 @@ This project is currently shared within the scope of a team project and is not y
 | Pomodoro Timer        | ✅ UI functional, backend Under integration    |
 | Custom Ai Promting       | 🔧 Under integration          |
 | Variable amount of daily notes | 🔧 Under integration          |
-| Google Calendat sync  | 🔧 Under integration          |
+| Google Calendar sync  | 🔧 Under integration          |
 
 
 ## 🧪 Previous Project Status : Alpha Build

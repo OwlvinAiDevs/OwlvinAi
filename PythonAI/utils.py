@@ -1,7 +1,7 @@
 import logging
 from typing import List
 from datetime import datetime
-from models import Session, Task
+from models import Session, TaskSchema
 
 def parse_llm_response(structured_response: List[dict]) -> List[Session]:
     """
@@ -19,7 +19,7 @@ def parse_llm_response(structured_response: List[dict]) -> List[Session]:
 
     for item in structured_response:
         try:
-            task = Task(
+            task = TaskSchema(
                 title=item["task"],
                 due_date=datetime.fromisoformat(item["end"]), # Assuming end date is the due date for now
                 duration_minutes=int((datetime.fromisoformat(item["end"]) - datetime.fromisoformat(item["start"])).total_seconds() / 60),

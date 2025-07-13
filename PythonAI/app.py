@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 from fastapi import FastAPI, HTTPException, Depends
 from contextlib import asynccontextmanager
 from ai_model import generate_schedule, format_schedule_prompt, call_openai_api
@@ -155,3 +155,26 @@ def create_task(task: CreateTask, db: DBSession = Depends(get_db)):
 def get_tasks(user_id: int, db: DBSession = Depends(get_db)):
     tasks = db.query(DBTask).filter(DBTask.user_id == user_id).all()
     return tasks
+
+class LogSession(BaseModel):
+    user_id: int
+    task_id: Optional[int] = None
+    start_time: datetime
+    end_time: datetime
+    was_productive: bool = True
+
+@app.post("/sessions/")
+def log_session(session: LogSession, db: DBSession = Depends(get_db)):
+    """
+    Log a study session for the user.
+    """
+    db_session = DBSessionLog(**session.model_dump())
+    db.add(db_session)
+    db.commit()
+    db.refresh(db_session)
+    logging.info(f"Session logged: {db_session.id} for user {session.user_id}")
+    return {"message": "Session logged successfully", "session_id": db_session.id}
+
+@app.get("/sessions/", response_model=List[LogSession])
+def get_sessions(user_id: int, db: DBSession = Depends(get_db)):
+    return db.query(DBSessionLog).filter(DBSessionLog.user_id == user_id).all()

@@ -1,14 +1,14 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
 from fastapi import FastAPI, HTTPException, Depends
 from contextlib import asynccontextmanager
 from ai_model import generate_schedule, format_schedule_prompt, call_openai_api
-from utils import parse_llm_response, get_user_state
+from utils import parse_llm_response, get_user_state, recalculate_cached_availability
 from database import init_db, SessionLocal
 from pydantic import BaseModel
 from sqlalchemy.orm import Session as DBSession
-from models import StudyRequest, ScheduleResponse, User, Task as DBTask, SessionLog as DBSessionLog
+from models import StudyRequest, ScheduleResponse, User, BlockedTime, EnergyLevel, CachedAvailability, Task as DBTask, SessionLog as DBSessionLog
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -47,6 +47,69 @@ def fetch_user_state(user_id: int, db: DBSession = Depends(get_db)):
     except Exception as e:
         logging.error(f"Error fetching user state: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.post("/seed_test_user/")
+def seed_test_user(db: DBSession = Depends(get_db)):
+    """
+    Seeds a test user with some initial data.
+    """
+    user_id = 1
+
+    # ensure user exists
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        user = User(id=user_id, username="test_user", email="test_user@example.com", auth_provider="local")
+        db.add(user)
+        db.commit()
+    
+    now = datetime.utcnow()
+
+    # create some tasks
+    task1 = DBTask(
+        user_id=user_id,
+        title="Complete Python project",
+        description="Finish the AI scheduling project for Owlvin.",
+        due_date=now + timedelta(days=1),
+        duration_minutes=60,
+        category="AI"
+    )
+
+    task2 = DBTask(
+        user_id=user_id,
+        title="Read AI research paper",
+        description="Study the latest advancements in AI scheduling.",
+        due_date=now + timedelta(days=2),
+        duration_minutes=45,
+        category="Research"
+    )
+
+    # add energy levels for next 2 time slots
+    e1 = EnergyLevel(user_id=user_id, timestamp=now, level="high")
+    e2 = EnergyLevel(user_id=user_id, timestamp=now + timedelta(hours=4), level="medium")
+
+    # add blocked times during the day
+    bt1 = BlockedTime(
+        user_id=user_id,
+        start_time=now + timedelta(hours=1),
+        end_time=now + timedelta(hours=2),
+        reason="class"
+    )
+
+    bt2 = BlockedTime(
+        user_id=user_id,
+        start_time=now + timedelta(hours=3),
+        end_time=now + timedelta(hours=4),
+        reason="gym"
+    )
+
+    # commit all changes
+    db.add_all([task1, task2, e1, e2, bt1, bt2])
+    db.commit()
+
+    # recalculate cached availability
+    recalculate_cached_availability(user_id, db)
+
+    return {"status": "Test user seeded successfully", "user_id": user_id}
 
 @app.post("/generate_schedule/", response_model=ScheduleResponse)
 def schedule(request: StudyRequest):

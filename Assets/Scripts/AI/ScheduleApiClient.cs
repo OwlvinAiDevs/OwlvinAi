@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 using TMPro;
+using Unity.VisualScripting;
+using System.Runtime.CompilerServices;
 
 [Serializable]
 public class TaskData
@@ -79,6 +81,50 @@ public class ScheduleApiClient : MonoBehaviour
     public void SendMockScheduleRequest()
     {
         StartCoroutine(RunScheduleRequest());
+    }
+
+    public void RequestScheduleFromBackend(int userId)
+    {
+        StartCoroutine(GetAndForwardUserState(userId));
+    }
+
+    private IEnumerator GetAndForwardUserState(int userId)
+    {
+        string userStateUrl = ApiConfig.GetFullUrl("/user_state?user_id=" + userId);
+        UnityWebRequest getRequest = UnityWebRequest.Get(userStateUrl);
+        getRequest.timeout = 45;
+        getRequest.SetRequestHeader("Content-Type", "application/json");
+
+        yield return getRequest.SendWebRequest();
+
+        if (getRequest.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError("Failed to get user state: " + getRequest.error);
+            yield break;
+        }
+
+        string json = getRequest.downloadHandler.text;
+        Debug.Log("User State JSON: " + json);
+
+        UnityWebRequest postRequest = new UnityWebRequest(ApiConfig.GetFullUrl(ApiConfig.Endpoints.GenerateSchedule), "POST");
+        postRequest.uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(json));
+        postRequest.downloadHandler = new DownloadHandlerBuffer();
+        postRequest.SetRequestHeader("Content-Type", "application/json");
+        postRequest.timeout = 60;
+
+        yield return postRequest.SendWebRequest();
+
+        if (postRequest.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError("Failed to get schedule: " + postRequest.error);
+            Debug.LogError("Response text: " + postRequest.downloadHandler.text);
+            yield break;
+        }
+        else
+        {
+            ScheduleResponse schedule = JsonUtility.FromJson<ScheduleResponse>(postRequest.downloadHandler.text);
+            Debug.Log("Final schedule parsed: " + schedule.sessions.Count + " sessions");
+        }
     }
 
     private IEnumerator RunScheduleRequest()

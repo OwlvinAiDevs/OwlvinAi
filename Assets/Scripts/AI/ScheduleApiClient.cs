@@ -201,7 +201,12 @@ public class ScheduleApiClient : MonoBehaviour
 
             foreach (var session in schedule.sessions)
             {
-                sb.AppendLine($"Task: {session.task.title}, Start: {session.start_time}, End: {session.end_time}, Break After: {session.break_after} minutes");
+                sb.AppendLine($"📝 Task: {session.task.title}");
+                sb.AppendLine($"📂 Category: {session.task.category}");
+                sb.AppendLine($"⏰ Start: {session.start_time}");
+                sb.AppendLine($"⏱ End: {session.end_time}");
+                sb.AppendLine($"☕ Break After: {session.break_after} minutes");
+                sb.AppendLine(); // extra line for spacing
             }
 
             if (schedule.warnings != null && schedule.warnings.Count > 0)

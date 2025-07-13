@@ -83,7 +83,7 @@ def get_db():
 def ping():
     return {"message": "pong"}
 
-@app.get("/user_state/", response_model=StudyRequest)
+@app.get("/user_state", response_model=StudyRequest)
 def fetch_user_state(user_id: int, db: DBSession = Depends(get_db)):
     try:
         user_state = get_user_state(user_id, db)
@@ -94,12 +94,12 @@ def fetch_user_state(user_id: int, db: DBSession = Depends(get_db)):
         logging.error(f"Error fetching user state: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
-@app.post("/seed_test_user/")
+@app.post("/seed_test_user")
 def seed_test_user(db: DBSession = Depends(get_db)):
     seed_test_user_data(db, user_id=1)
     return {"status": "Test user seeded successfully", "user_id": 1}
 
-@app.post("/generate_schedule/", response_model=ScheduleResponse)
+@app.post("/generate_schedule", response_model=ScheduleResponse)
 def schedule(request: StudyRequest):
     logging.info(f"Received StudyRequest: user_id={request.user_id}, tasks={len(request.tasks)}, slots={len(request.available_slots)}")
     if not request.available_slots:
@@ -110,7 +110,7 @@ def schedule(request: StudyRequest):
         raise HTTPException(status_code=400, detail="Not enough energy for available time slots.")
     return generate_schedule(request)
 
-@app.post("/generate_ai_schedule/", response_model=ScheduleResponse)
+@app.post("/generate_ai_schedule", response_model=ScheduleResponse)
 async def generate_ai_schedule(request: StudyRequest):
     try:
         logging.info(f"[START] /generate_ai_schedule for user_id={request.user_id}")
@@ -180,7 +180,7 @@ class TaskOut(BaseModel):
     class Config:
         orm_mode = True
 
-@app.post("/tasks/", response_model=TaskOut)
+@app.post("/tasks", response_model=TaskOut)
 def create_task(task: CreateTask, db: DBSession = Depends(get_db)):
     db_task = DBTask(**task.model_dump())
     db.add(db_task)
@@ -189,7 +189,7 @@ def create_task(task: CreateTask, db: DBSession = Depends(get_db)):
     logging.info(f"Task created: {db_task.title} for user {task.user_id}")
     return db_task
 
-@app.get("/tasks/", response_model=List[TaskOut])
+@app.get("/tasks", response_model=List[TaskOut])
 def get_tasks(user_id: int, db: DBSession = Depends(get_db)):
     return db.query(DBTask).filter(DBTask.user_id == user_id).all()
 
@@ -202,7 +202,7 @@ class LogSession(BaseModel):
     end_time: datetime
     was_productive: bool = True
 
-@app.post("/sessions/")
+@app.post("/sessions")
 def log_session(session: LogSession, db: DBSession = Depends(get_db)):
     db_session = DBSessionLog(**session.model_dump())
     db.add(db_session)
@@ -211,6 +211,6 @@ def log_session(session: LogSession, db: DBSession = Depends(get_db)):
     logging.info(f"Session logged: {db_session.id} for user {session.user_id}")
     return {"message": "Session logged successfully", "session_id": db_session.id}
 
-@app.get("/sessions/", response_model=List[LogSession])
+@app.get("/sessions", response_model=List[LogSession])
 def get_sessions(user_id: int, db: DBSession = Depends(get_db)):
     return db.query(DBSessionLog).filter(DBSessionLog.user_id == user_id).all()

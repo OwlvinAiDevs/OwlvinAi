@@ -1,7 +1,9 @@
 import logging
 from typing import List
 from datetime import datetime
-from models import Session, TaskSchema
+from database import SessionLocal
+from sqlalchemy.orm import Session as DBSession
+from models import Session, TaskSchema, StudyRequest, TimeSlot, EnergyLevel, CachedAvailability, Task as DBTask
 
 def parse_llm_response(structured_response: List[dict]) -> List[Session]:
     """
@@ -36,3 +38,74 @@ def parse_llm_response(structured_response: List[dict]) -> List[Session]:
             logging.getLogger(__name__).error(f"Skipping item due to parse failure: {e}")
             continue
     return sessions
+
+def get_user_state(user_id: int, db: DBSession = None) -> StudyRequest:
+    """
+    Retrieves the user's study request state from the database.
+    
+    Args:
+        user_id (int): The ID of the user.
+        db (DBSession, optional): The database session to use. If None, a new session will be created.
+    
+    Returns:
+        StudyRequest: The user's study request state.
+    """
+    close_db = False
+    if db is None:
+        db = SessionLocal()
+        close_db = True
+    
+    try:
+        # tasks
+        tasks = db.query(DBTask).filter(DBTask.user_id == user_id, DBTask.completed == False).all()
+        task_schemas = [
+            TaskSchema(
+                title=t.title,
+                due_date=t.due_date,
+                duration_minutes=t.duration_minutes,
+                category=t.category if t.category else "General"
+            )
+            for t in tasks
+        ]
+
+        # available time slots
+        now = datetime.now()
+        slots = db.query(CachedAvailability).filter(
+            CachedAvailability.user_id == user_id,
+            CachedAvailability.end_time > now
+        ).order_by(CachedAvailability.start_time).all()
+
+        time_slots = [
+            TimeSlot(
+                start_time=s.start_time,
+                end_time=s.end_time,
+            )
+            for s in slots
+        ]
+
+        # energy levels (latest N for the slots)
+        energy_raw = db.query(EnergyLevel).filter(EnergyLevel.user_id == user_id).order_by(EnergyLevel.timestamp.desc()).limit(len(time_slots)).all()
+
+        def energy_str_to_int(e: str) -> int:
+            return {
+                "low": 1,
+                "medium": 2,
+                "high": 3
+            }.get(e.lower(), 2) # Default to medium if not found
+        
+        energy_levels = [energy_str_to_int(e.level) for e in reversed(energy_raw)]
+
+        # default pomodoro settings
+        pomodoro_length = 25
+
+        return StudyRequest(
+            user_id=str(user_id),
+            energy_level=energy_levels,
+            pomodoro_length=pomodoro_length,
+            available_slots=time_slots,
+            tasks=task_schemas
+            )
+    
+    finally:
+        if close_db:
+            db.close()

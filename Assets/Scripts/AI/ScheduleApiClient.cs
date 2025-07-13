@@ -90,7 +90,7 @@ public class ScheduleApiClient : MonoBehaviour
 
     private IEnumerator GetAndForwardUserState(int userId)
     {
-        string userStateUrl = ApiConfig.GetFullUrl("/user_state?user_id=" + userId);
+        string userStateUrl = ApiConfig.GetFullUrl(ApiConfig.Endpoints.GetUserState) + $"?user_id={userId}";
         UnityWebRequest getRequest = UnityWebRequest.Get(userStateUrl);
         getRequest.timeout = 45;
         getRequest.SetRequestHeader("Content-Type", "application/json");

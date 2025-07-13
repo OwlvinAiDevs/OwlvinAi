@@ -1,9 +1,41 @@
 import logging
 from typing import List
-from datetime import datetime
+from datetime import datetime, timedelta, time
 from database import SessionLocal
 from sqlalchemy.orm import Session as DBSession
-from models import Session, TaskSchema, StudyRequest, TimeSlot, EnergyLevel, CachedAvailability, Task as DBTask
+from models import Session, TaskSchema, StudyRequest, TimeSlot, EnergyLevel, CachedAvailability, BlockedTime, Task as DBTask
+
+def recalculate_cached_availability(user_id: int, db: DBSession):
+    today = datetime.now().date()
+    start_of_day = datetime.combine(today, time(8, 0))  # Assuming the day starts at 8 AM
+    end_of_day = datetime.combine(today, time(22, 0))  # Assuming the day ends at 10 PM
+
+    # get blocked times for today
+    blocked = db.query(BlockedTime).filter(
+        BlockedTime.user_id == user_id,
+        BlockedTime.start_time >= start_of_day,
+        BlockedTime.end_time <= end_of_day
+    ).order_by(BlockedTime.start_time).all()
+
+    # subtract blocked times from the available slots
+    available = []
+    current_start = start_of_day
+
+    for b in blocked:
+        if b.start_time > current_start:
+            available.append((current_start, b.start_time))
+        current_start = max(current_start, b.end_time)
+
+        if current_start < end_of_day:
+            available.append((current_start, end_of_day))
+    
+    # update the cached availability
+    db.query(CachedAvailability).filter(CachedAvailability.user_id == user_id).delete()
+
+    for start, end in available:
+        db.add(CachedAvailability(user_id=user_id, start_time=start, end_time=end))
+    
+    db.commit()
 
 def parse_llm_response(structured_response: List[dict]) -> List[Session]:
     """

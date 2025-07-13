@@ -71,37 +71,38 @@ def generate_schedule(request: StudyRequest) -> ScheduleResponse:
     )
 
 def format_schedule_prompt(request: StudyRequest) -> str:
-    """
-    Converts a StudyRequest into a natural-language prompt string for the LLM.
-    """
     lines = []
     lines.append(f"The user prefers a study session length of {request.pomodoro_length} minutes.")
-    lines.append(f"Available time slots with energy levels for the user are:")
+
+    # Time slot formatting
+    lines.append("Available time slots with energy levels are:")
     for i, slot in enumerate(request.available_slots):
         energy = request.energy_level[i] if i < len(request.energy_level) else "unknown"
-        start = slot.start_time.strftime("%A, %B %d at %I:%M %p") # Format time like Wednesday, June 11 at 05:29 PM
+        start = slot.start_time.strftime("%A, %B %d at %I:%M %p")
         end = slot.end_time.strftime("%I:%M %p")
         lines.append(f"- {start} to {end} (Energy Level: {energy})")
-    
+
+    # Task formatting
     lines.append("Tasks to be scheduled:")
     for task in request.tasks:
         due = task.due_date.strftime("%A, %B %d")
-        category = f" [{task.category}]" if task.category else ""
-        lines.append(f"- {task.title}{category}, {task.duration_minutes} due {due}")
-    
+        lines.append(f"- {task.title}, {task.duration_minutes} min, due {due}")
+
+    # Instruction for GPT format compliance
     lines.append("\nPlease generate an optimized study schedule using the given constraints.")
-    lines.append("Repond with ONLY a plain JSON array in the following format (do not use markdown):")
+    lines.append("Respond ONLY with a plain JSON array of session dictionaries using this format (no markdown, no commentary):")
     lines.append("""
 [
     {
-        "task": "Write history essay",
-        "start": "2025-06-11T10:00:00",
-        "end": "2025-06-11T10:25:00",
-        "category": "History",
+        "task": "Complete Python project",
+        "start": "2025-07-13T09:00:00",
+        "end": "2025-07-13T09:25:00",
+        "category": "AI"
     }
 ]
-                 """)
+""")
     return "\n".join(lines)
+
 
 async def call_openai_api(prompt: str, max_retries: int = 3, delay: float = 2.0) -> List[dict]:
     """

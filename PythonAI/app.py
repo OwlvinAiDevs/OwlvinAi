@@ -1,10 +1,14 @@
 import logging
-from fastapi import FastAPI, HTTPException
+from datetime import datetime
+from typing import List
+from fastapi import FastAPI, HTTPException, Depends
 from contextlib import asynccontextmanager
 from ai_model import generate_schedule, format_schedule_prompt, call_openai_api
-from models import StudyRequest, ScheduleResponse
 from utils import parse_llm_response
-from database import init_db
+from database import init_db, SessionLocal
+from pydantic import BaseModel
+from sqlalchemy.orm import Session as DBSession
+from models import StudyRequest, ScheduleResponse, User, Task as DBTask, SessionLog as DBSessionLog
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -97,3 +101,57 @@ async def generate_ai_schedule(request: StudyRequest):
         fallback_response.message = "AI scheduling failed. Rule-based scheduling used instead."
         fallback_response.success = False # Fallback implies partial failure
         return fallback_response
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+class CreateTask(BaseModel):
+    user_id: int
+    title: str
+    description: str = ""
+    due_date: datetime
+    duration_minutes: int
+    category: str = ""
+    completed: bool = False
+
+class TaskOut(BaseModel):
+    id: int
+    user_id: int
+    title: str
+    description: str
+    due_date: datetime
+    duration_minutes: int
+    category: str
+    completed: bool
+
+    class Config:
+        orm_mode = True
+
+@app.post("/tasks/", response_model=TaskOut)
+def create_task(task: CreateTask, db: DBSession = Depends(get_db)):
+    """
+    Create a new task for the user.
+    """
+    db_task = DBTask(
+        user_id=task.user_id,
+        title=task.title,
+        description=task.description,
+        due_date=task.due_date,
+        duration_minutes=task.duration_minutes,
+        category=task.category,
+        completed=task.completed
+    )
+    db.add(db_task)
+    db.commit()
+    db.refresh(db_task)
+    logging.info(f"Task created: {db_task.title} for user {task.user_id}")
+    return db_task
+
+@app.get("/tasks/", response_model=List[TaskOut])
+def get_tasks(user_id: int, db: DBSession = Depends(get_db)):
+    tasks = db.query(DBTask).filter(DBTask.user_id == user_id).all()
+    return tasks

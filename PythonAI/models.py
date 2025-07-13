@@ -98,6 +98,7 @@ class Task(Base):
     description = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     due_date = Column(DateTime)
+    duration_minutes = Column(Integer)
     completed = Column(Boolean, default=False)
     category = Column(String)
     user_id = Column(Integer, ForeignKey('users.id'))

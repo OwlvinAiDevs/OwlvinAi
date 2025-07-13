@@ -123,7 +123,32 @@ public class ScheduleApiClient : MonoBehaviour
         else
         {
             ScheduleResponse schedule = JsonUtility.FromJson<ScheduleResponse>(postRequest.downloadHandler.text);
-            Debug.Log("Final schedule parsed: " + schedule.sessions.Count + " sessions");
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.AppendLine($"Parsed Schedule for: {schedule.user_id}");
+            sb.AppendLine($"Total Sessions: {schedule.sessions.Count}");
+
+            foreach (var session in schedule.sessions)
+            {
+                sb.AppendLine($"Task: {session.task.title}, Start: {session.start_time}, End: {session.end_time}, Break After: {session.break_after} minutes");
+            }
+
+            if (schedule.warnings != null && schedule.warnings.Count > 0)
+            {
+                sb.AppendLine("\n⚠ Warnings:");
+                foreach (var warning in schedule.warnings)
+                {
+                    sb.AppendLine($"• {warning}");
+                }
+            }
+
+            if (outputText != null)
+            {
+                outputText.text = sb.ToString(); // Display result in ScrollView
+            }
+            else
+            {
+                Debug.LogWarning("⚠ outputText is null. UI not updated.");
+            }
         }
     }
 

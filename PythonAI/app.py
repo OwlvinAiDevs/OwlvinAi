@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import FastAPI, HTTPException, Depends
 from contextlib import asynccontextmanager
 from ai_model import generate_schedule, format_schedule_prompt, call_openai_api
-from utils import parse_llm_response
+from utils import parse_llm_response, get_user_state
 from database import init_db, SessionLocal
 from pydantic import BaseModel
 from sqlalchemy.orm import Session as DBSession
@@ -23,9 +23,30 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 @app.get("/ping")
 def ping():
     return {"message": "pong"}
+
+@app.get("/user_state/", response_model=StudyRequest)
+def fetch_user_state(user_id: int, db: DBSession = Depends(get_db)):
+    """
+    Fetches the user's study request state from the database.
+    """
+    try:
+        user_state = get_user_state(user_id, db)
+        if not user_state:
+            raise HTTPException(status_code=404, detail="User state not found.")
+        return user_state
+    except Exception as e:
+        logging.error(f"Error fetching user state: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.post("/generate_schedule/", response_model=ScheduleResponse)
 def schedule(request: StudyRequest):
@@ -101,13 +122,6 @@ async def generate_ai_schedule(request: StudyRequest):
         fallback_response.message = "AI scheduling failed. Rule-based scheduling used instead."
         fallback_response.success = False # Fallback implies partial failure
         return fallback_response
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 class CreateTask(BaseModel):
     user_id: int

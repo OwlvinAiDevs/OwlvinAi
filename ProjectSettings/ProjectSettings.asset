@@ -12,7 +12,7 @@ PlayerSettings:
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: DefaultCompany
+  companyName: OwlvinAiDevs
   productName: OwlvinAi
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
@@ -282,14 +282,7 @@ PlayerSettings:
   AndroidMinifyDebug: 0
   AndroidValidateAppBundleSize: 1
   AndroidAppBundleSizeToValidate: 150
-  m_BuildTargetIcons:
-  - m_BuildTarget: 
-    m_Icons:
-    - serializedVersion: 2
-      m_Icon: {fileID: 2800000, guid: 5f5bdf0df99dbba429a913cc5e50fb8c, type: 3}
-      m_Width: 128
-      m_Height: 128
-      m_Kind: 0
+  m_BuildTargetIcons: []
   m_BuildTargetPlatformIcons:
   - m_BuildTarget: iPhone
     m_Icons:
@@ -832,7 +825,7 @@ PlayerSettings:
   metroCertificateSubject: 
   metroCertificateIssuer: 
   metroCertificateNotAfter: 0000000000000000
-  metroApplicationDescription: StuddyBuddy
+  metroApplicationDescription: OwlvinAi
   wsaImages: {}
   metroTileShortName: 
   metroTileShowName: 0
@@ -903,7 +896,7 @@ PlayerSettings:
   cloudProjectId: 0c6fb03a-06ed-4c90-9f66-bcbdd3d5153a
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: StuddyBuddy
+  projectName: OwlvinAi
   organizationId: zzorg
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0

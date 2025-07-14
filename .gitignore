@@ -87,6 +87,9 @@ PythonAI/*.pdb
 PythonAI/.runtime
 PythonAI/.reload
 
+# SQLite database
+*.db
+
 # Editor-specific settings (optional but useful if you're using these tools)
 .vscode/
 .idea/

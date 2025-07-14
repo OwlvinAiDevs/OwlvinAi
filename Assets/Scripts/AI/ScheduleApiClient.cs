@@ -61,6 +61,16 @@ public class ScheduleResponse
     public List<string> warnings;
 }
 
+[Serializable]
+public class StudyRequestWrapper
+{
+    public string user_id;
+    public int[] energy_level;
+    public int pomodoro_length;
+    public TimeSlotData[] available_slots;
+    public TaskData[] tasks;
+}
+
 public class ScheduleApiClient : MonoBehaviour
 {
     public TextMeshProUGUI outputText;
@@ -69,6 +79,80 @@ public class ScheduleApiClient : MonoBehaviour
     public void SendMockScheduleRequest()
     {
         StartCoroutine(RunScheduleRequest());
+    }
+
+    public void RequestScheduleFromBackend(int userId)
+    {
+        StartCoroutine(GetAndForwardUserState(userId));
+    }
+
+    private IEnumerator GetAndForwardUserState(int userId)
+    {
+        string userStateUrl = ApiConfig.GetFullUrl(ApiConfig.Endpoints.GetUserState) + $"?user_id={userId}";
+        UnityWebRequest getRequest = UnityWebRequest.Get(userStateUrl);
+        getRequest.timeout = 45;
+        getRequest.SetRequestHeader("Content-Type", "application/json");
+
+        yield return getRequest.SendWebRequest();
+
+        if (getRequest.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError("Failed to get user state: " + getRequest.error);
+            yield break;
+        }
+
+        string json = getRequest.downloadHandler.text;
+        Debug.Log("User State JSON: " + json);
+
+        UnityWebRequest postRequest = new UnityWebRequest(ApiConfig.GetFullUrl(ApiConfig.Endpoints.GenerateSchedule), "POST");
+        postRequest.uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(json));
+        postRequest.downloadHandler = new DownloadHandlerBuffer();
+        postRequest.SetRequestHeader("Content-Type", "application/json");
+        postRequest.timeout = 60;
+
+        yield return postRequest.SendWebRequest();
+
+        if (postRequest.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError("Failed to get schedule: " + postRequest.error);
+            Debug.LogError("Response text: " + postRequest.downloadHandler.text);
+            yield break;
+        }
+        else
+        {
+            ScheduleResponse schedule = JsonUtility.FromJson<ScheduleResponse>(postRequest.downloadHandler.text);
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.AppendLine($"Parsed Schedule for: {schedule.user_id}");
+            sb.AppendLine($"Total Sessions: {schedule.sessions.Count}");
+
+            foreach (var session in schedule.sessions)
+            {
+                sb.AppendLine($"📝 Task: {session.task.title}");
+                sb.AppendLine($"📂 Category: {session.task.category}");
+                sb.AppendLine($"⏰ Start: {session.start_time}");
+                sb.AppendLine($"⏱ End: {session.end_time}");
+                sb.AppendLine($"☕ Break After: {session.break_after} minutes");
+                sb.AppendLine(); // extra line for spacing
+            }
+
+            if (schedule.warnings != null && schedule.warnings.Count > 0)
+            {
+                sb.AppendLine("\n⚠ Warnings:");
+                foreach (var warning in schedule.warnings)
+                {
+                    sb.AppendLine($"• {warning}");
+                }
+            }
+
+            if (outputText != null)
+            {
+                outputText.text = sb.ToString(); // Display result in ScrollView
+            }
+            else
+            {
+                Debug.LogWarning("⚠ outputText is null. UI not updated.");
+            }
+        }
     }
 
     private IEnumerator RunScheduleRequest()
@@ -117,7 +201,12 @@ public class ScheduleApiClient : MonoBehaviour
 
             foreach (var session in schedule.sessions)
             {
-                sb.AppendLine($"Task: {session.task.title}, Start: {session.start_time}, End: {session.end_time}, Break After: {session.break_after} minutes");
+                sb.AppendLine($"📝 Task: {session.task.title}");
+                sb.AppendLine($"📂 Category: {session.task.category}");
+                sb.AppendLine($"⏰ Start: {session.start_time}");
+                sb.AppendLine($"⏱ End: {session.end_time}");
+                sb.AppendLine($"☕ Break After: {session.break_after} minutes");
+                sb.AppendLine(); // extra line for spacing
             }
 
             if (schedule.warnings != null && schedule.warnings.Count > 0)

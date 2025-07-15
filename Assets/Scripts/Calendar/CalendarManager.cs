@@ -11,11 +11,13 @@ public class CalendarManager : MonoBehaviour
     public Button nextButton;
     public GameObject dayCellPrefab;
     public Transform dayGrid;
+    public GameObject UIPanel1;
+    public GameObject UIPanel2;
 
     public TMP_InputField noteInputField;
     public TextMeshProUGUI noteDisplayText;
     public Button saveNoteButton;
-    public Button clearNoteButton; // Optional
+    public Button clearNoteButton;
 
     private DateTime currentDate;
     private int todayDay;
@@ -74,8 +76,7 @@ public class CalendarManager : MonoBehaviour
 
                 if (!clickedTodayThisMonth)
                 {
-                    OnDayClicked(capturedDay);
-                    clickedTodayThisMonth = true;
+                    
                 }
             }
         }
@@ -88,6 +89,11 @@ public class CalendarManager : MonoBehaviour
 
         string formattedDate = $"{clickedDate:dddd MMMM} {GetDayWithSuffix(day)} {clickedDate:yyyy}";
         selectedDateLabel.text = formattedDate;
+        if (UIPanel1 != null)
+            UIPanel1.SetActive(!UIPanel1.activeSelf);
+
+        if (UIPanel2 != null)
+            UIPanel2.SetActive(!UIPanel2.activeSelf);
 
         string savedNote = PlayerPrefs.GetString(currentDateKey, "");
         noteInputField.text = savedNote;
@@ -98,20 +104,55 @@ public class CalendarManager : MonoBehaviour
     {
         if (!string.IsNullOrEmpty(currentDateKey))
         {
-            string note = noteInputField.text;
-            PlayerPrefs.SetString(currentDateKey, note);
-            noteDisplayText.text = string.IsNullOrWhiteSpace(note) ? "(Add a New Note)" : note;
+            string existingNotes = PlayerPrefs.GetString(currentDateKey, "");
+            string newNote = noteInputField.text.Trim();
+            if (string.IsNullOrEmpty(newNote)) return;
+
+            string updatedNotes;
+            if (string.IsNullOrEmpty(existingNotes))
+                updatedNotes = newNote;
+            else
+                updatedNotes = existingNotes + "\n" + newNote;
+
+            PlayerPrefs.SetString(currentDateKey, updatedNotes);
+
+            noteDisplayText.text = updatedNotes;
+            noteInputField.text = "";
         }
     }
 
+
     void ClearNote()
     {
-        if (!string.IsNullOrEmpty(currentDateKey))
-        {
+        if (string.IsNullOrEmpty(currentDateKey)) return;
+
+        string savedNotes = PlayerPrefs.GetString(currentDateKey, "");
+        if (string.IsNullOrEmpty(savedNotes)) return;
+
+        string[] lines = savedNotes.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+        if (lines.Length == 0) return;
+
+        string[] updatedLines = new string[lines.Length - 1];
+        Array.Copy(lines, updatedLines, lines.Length - 1);
+
+        string updatedNotes = string.Join("\n", updatedLines);
+
+        if (string.IsNullOrEmpty(updatedNotes))
             PlayerPrefs.DeleteKey(currentDateKey);
-            noteInputField.text = "";
-            noteDisplayText.text = "(Add a New Note)";
-        }
+        else
+            PlayerPrefs.SetString(currentDateKey, updatedNotes);
+
+        noteDisplayText.text = string.IsNullOrEmpty(updatedNotes) ? "(Add a New Note)" : updatedNotes;
+    }
+
+    public void ToggleUIPanels()
+    {
+        if (UIPanel1 != null)
+            UIPanel1.SetActive(!UIPanel1.activeSelf);
+
+        if (UIPanel2 != null)
+            UIPanel2.SetActive(!UIPanel2.activeSelf);
     }
 
     string GetDayWithSuffix(int day)

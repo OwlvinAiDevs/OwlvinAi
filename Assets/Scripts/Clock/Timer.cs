@@ -13,6 +13,11 @@ public class TimerController : MonoBehaviour
     public AudioClip timerEndSound;
     private AudioSource audioSource;
 
+    // Pomodoro Variables
+    private bool pomodoroActive = false;
+    private int pomodoroStep = 0;
+    private int pomodoroCycles = 0;
+
     void Start()
     {
         audioSource = GetComponent<AudioSource>();
@@ -40,10 +45,16 @@ public class TimerController : MonoBehaviour
                 {
                     totalSeconds = 0;
                     isRunning = false;
+
                     if (!hasPlayedSound)
                     {
                         PlayTimerEndSound();
                         hasPlayedSound = true;
+                    }
+
+                    if (pomodoroActive)
+                    {
+                        AdvancePomodoro();
                     }
                 }
 
@@ -90,5 +101,73 @@ public class TimerController : MonoBehaviour
         {
             audioSource.Play();
         }
+    }
+
+   
+
+    public void TogglePomodoro()
+    {
+        if (pomodoroActive)
+        {
+           
+            pomodoroActive = false;
+            isRunning = false;
+            totalSeconds = 0;
+            pomodoroStep = 0;
+            pomodoroCycles = 0;
+            UpdateDisplay();
+        }
+        else
+        {
+            
+            pomodoroActive = true;
+            pomodoroStep = 0;
+            pomodoroCycles = 0;
+            StartPomodoroPhase();
+        }
+    }
+
+    private void StartPomodoroPhase()
+    {
+        switch (pomodoroStep)
+        {
+            case 0: 
+                totalSeconds = 25 * 60;
+                break;
+            case 1:
+            case 2:
+            case 3:
+            case 4: 
+                totalSeconds = 5 * 60;
+                break;
+            case 5: 
+                totalSeconds = 60 * 60;
+                break;
+            default:
+                pomodoroStep = 0;
+                totalSeconds = 25 * 60;
+                break;
+        }
+
+        isRunning = true;
+        hasPlayedSound = false;
+        UpdateDisplay();
+    }
+
+    private void AdvancePomodoro()
+    {
+        if (pomodoroStep == 0)
+        {
+           
+            pomodoroCycles++;
+            pomodoroStep = (pomodoroCycles % 4 == 0) ? 5 : 1; 
+        }
+        else
+        {
+
+            pomodoroStep = 0;
+        }
+
+        StartPomodoroPhase();
     }
 }

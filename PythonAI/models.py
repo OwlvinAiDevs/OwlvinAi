@@ -126,6 +126,18 @@ class SessionLog(Base):
     user = relationship("User", backref="session_logs")
     task = relationship("Task", backref="session_logs")
 
+class ScheduledSession(Base):
+    __tablename__ = 'scheduled_sessions'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    task_id = Column(Integer, ForeignKey('tasks.id'))
+    start_time = Column(DateTime, index=True)
+    end_time = Column(DateTime, index=True)
+    break_after = Column(Integer, default=5)  # Break time in minutes
+
+    user = relationship("User", backref="scheduled_sessions")
+    task = relationship("Task", backref="scheduled_sessions")
+
 class EnergyLevel(Base):
     __tablename__ = 'energy_levels'
     id = Column(Integer, primary_key=True)

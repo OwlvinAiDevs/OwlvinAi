@@ -8,7 +8,8 @@ from utils import parse_llm_response, get_user_state, recalculate_cached_availab
 from database import init_db, SessionLocal
 from pydantic import BaseModel
 from sqlalchemy.orm import Session as DBSession
-from models import StudyRequest, ScheduleResponse, User, BlockedTime, EnergyLevel, CachedAvailability, Task as DBTask, SessionLog as DBSessionLog
+from models import StudyRequest, ScheduleResponse, User, BlockedTime, EnergyLevel, CreateScheduledSession, ScheduledSessionOut
+from models import Task as DBTask, SessionLog as DBSessionLog, ScheduledSession as DBScheduledSession
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -156,6 +157,8 @@ async def generate_ai_schedule(request: StudyRequest):
         fallback.message = "AI scheduling failed. Rule-based scheduling used instead."
         fallback.success = False
         return fallback
+
+
 
 # --- Task Management Endpoints ---
 

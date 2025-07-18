@@ -129,6 +129,10 @@ async def generate_ai_schedule(request: StudyRequest, db: DBSession = Depends(ge
         sessions = parse_llm_response(gpt_response)
         logging.info(f"Parsed {len(sessions)} sessions from GPT response")
 
+        # Clear old scheduled sessions for this user
+        deleted = db.query(DBScheduledSession).filter(DBScheduledSession.user_id == int(request.user_id)).delete()
+        logging.info(f"[CLEANUP] Deleted {deleted} previous scheduled sessions for user {request.user_id}")
+
         # Persist AI-generated sessions into scheduled_sessions table
         for s in sessions:
             matched_task = db.query(DBTask).filter(

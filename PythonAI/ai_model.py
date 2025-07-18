@@ -83,10 +83,13 @@ def format_schedule_prompt(request: StudyRequest) -> str:
         lines.append(f"- {start} to {end} (Energy Level: {energy})")
 
     # Task formatting
-    lines.append("Tasks to be scheduled:")
+    lines.append("Tasks to be scheduled (with exact categories):")
     for task in request.tasks:
         due = task.due_date.strftime("%A, %B %d")
-        lines.append(f"- {task.title}, {task.duration_minutes} min, due {due}")
+        category = task.category or "General"
+        lines.append(f"- {task.title}, {task.duration_minutes} min, due {due}, category: {category}")
+    lines.append("\nImportant: Do not infer or rename task categories. Use the exact category string provided for each task.")
+
 
     # Instruction for GPT format compliance
     lines.append("\nPlease generate an optimized study schedule using the given constraints.")

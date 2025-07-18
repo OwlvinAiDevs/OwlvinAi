@@ -158,7 +158,14 @@ async def generate_ai_schedule(request: StudyRequest):
         fallback.success = False
         return fallback
 
-
+@app.post("/schedule_session", response_model=ScheduledSessionOut)
+def create_scheduled_session(session: CreateScheduledSession, db: DBSession = Depends(get_db)):
+    db_session = DBScheduledSession(**session.model_dump())
+    db.add(db_session)
+    db.commit()
+    db.refresh(db_session)
+    logging.info(f"Scheduled session created: {db_session.id} for user {session.user_id}")
+    return db_session
 
 # --- Task Management Endpoints ---
 

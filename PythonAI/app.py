@@ -167,6 +167,10 @@ def create_scheduled_session(session: CreateScheduledSession, db: DBSession = De
     logging.info(f"Scheduled session created: {db_session.id} for user {session.user_id}")
     return db_session
 
+@app.get("/scheduled_sessions", response_model=List[ScheduledSessionOut])
+def get_scheduled_sessions(user_id: int, db: DBSession = Depends(get_db)):
+    return db.query(DBScheduledSession).filter(DBScheduledSession.user_id == user_id).all()
+
 # --- Task Management Endpoints ---
 
 class CreateTask(BaseModel):

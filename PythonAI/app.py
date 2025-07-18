@@ -112,7 +112,7 @@ def schedule(request: StudyRequest):
     return generate_schedule(request)
 
 @app.post("/generate_ai_schedule", response_model=ScheduleResponse)
-async def generate_ai_schedule(request: StudyRequest):
+async def generate_ai_schedule(request: StudyRequest, db: DBSession = Depends(get_db)):
     try:
         logging.info(f"[START] /generate_ai_schedule for user_id={request.user_id}")
         logging.debug(f"Request JSON: {request.model_dump_json()}")
@@ -129,6 +129,26 @@ async def generate_ai_schedule(request: StudyRequest):
         sessions = parse_llm_response(gpt_response)
         logging.info(f"Parsed {len(sessions)} sessions from GPT response")
 
+        # Persist AI-generated sessions into scheduled_sessions table
+        for s in sessions:
+            matched_task = db.query(DBTask).filter(
+                DBTask.title == s.task.title,
+                DBTask.user_id == int(request.user_id)
+            ).first()
+            if matched_task:
+                db.add(DBScheduledSession(
+                    user_id=int(request.user_id),
+                    task_id=matched_task.id,
+                    start_time=s.start_time,
+                    end_time=s.end_time,
+                    break_after=s.break_after or 5
+                ))
+            else:
+                logging.warning(f"Task '{s.task.title}' not found in database for user {request.user_id}. Skipping session creation.")
+        db.commit()
+        logging.info("[COMMIT] Scheduled sessions saved to database")
+
+        # Metrics and response formatting
         total_study_time = sum([s.task.duration_minutes for s in sessions])
         total_break_time = sum([s.break_after for s in sessions if s.break_after])
         scheduled_titles = {s.task.title for s in sessions}

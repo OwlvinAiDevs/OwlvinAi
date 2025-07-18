@@ -64,6 +64,11 @@ class CreateScheduledSession(BaseModel):
     end_time: datetime
     break_after: Optional[int] = 5
 
+class ScheduledSessionOut(BaseModel):
+    id: int
+    class Config:
+        orm_mode = True
+
 class ScheduleResponse(BaseModel):
     """
     Response returned to the frontend after scheduling generation.

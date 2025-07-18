@@ -57,6 +57,13 @@ class Session(BaseModel):
     def __repr__(self):
         return f"Session(task={self.task.title}, start={self.start_time.strftime('%H:%M')}, end={self.end_time.strftime('%H:%M')}, break_after={self.break_after} min)"
 
+class CreateScheduledSession(BaseModel):
+    user_id: int
+    task_id: int
+    start_time: datetime
+    end_time: datetime
+    break_after: Optional[int] = 5
+
 class ScheduleResponse(BaseModel):
     """
     Response returned to the frontend after scheduling generation.

@@ -1,18 +1,5 @@
-using System.Collections;
+using System;
+using System.IO;
 using System.Collections.Generic;
 using UnityEngine;
-
-public class ScheduleLocalStorage : MonoBehaviour
-{
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-}
+using SQLite;

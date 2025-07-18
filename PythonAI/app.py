@@ -149,7 +149,7 @@ async def generate_ai_schedule(request: StudyRequest, db: DBSession = Depends(ge
                     break_after=s.break_after or 5
                 ))
             else:
-                logging.warning(f"Task '{s.task.title}' not found in database for user {request.user_id}. Skipping session creation.")
+                logging.warning(f"[MISS] Task '{s.task.title}' not found in DB for user {request.user_id}")
         db.commit()
         logging.info("[COMMIT] Scheduled sessions saved to database")
 

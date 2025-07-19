@@ -121,6 +121,18 @@ public class ScheduleApiClient : MonoBehaviour
         else
         {
             ScheduleResponse schedule = JsonUtility.FromJson<ScheduleResponse>(postRequest.downloadHandler.text);
+
+            // Save schedule locally after successful retrieval
+            var localSaver = FindObjectOfType<ScheduleLocalStorage>();
+            if (localSaver != null)
+            {
+                localSaver.SaveScheduleLocally(schedule);
+            }
+            else
+            {
+                Debug.LogWarning("⚠ ScheduleLocalStorage not found in scene. Skipping local save.");
+            }
+
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
             sb.AppendLine($"Parsed Schedule for: {schedule.user_id}");
             sb.AppendLine($"Total Sessions: {schedule.sessions.Count}");

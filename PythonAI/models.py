@@ -50,6 +50,7 @@ class Session(BaseModel):
         break_after: Suggested break duration after the session in minutes.
     """
     task: TaskSchema
+    task_id: Optional[int] = None  # For database compatibility
     start_time: datetime
     end_time: datetime
     break_after: Optional[int] = 5 # Default break time after each session in minutes

@@ -5,12 +5,19 @@ using System;
 public class ScheduledSession
 {
     [PrimaryKey, AutoIncrement]
-    public int Id { get; set; }
+    public int id { get; set; }
 
-    public int UserId { get; set; }
-    public string TaskTitle { get; set; }
-    public string TaskCategory { get; set; }
-    public DateTime StartTime { get; set; }
-    public DateTime EndTime { get; set; }
-    public int BreakAfter { get; set; }
+    [Indexed]
+    public int user_id { get; set; }
+
+    [Indexed]
+    public int task_id { get; set; }
+
+    [Indexed]
+    public DateTime start_time { get; set; }
+
+    [Indexed]
+    public DateTime end_time { get; set; }
+
+    public int break_after { get; set; }
 }

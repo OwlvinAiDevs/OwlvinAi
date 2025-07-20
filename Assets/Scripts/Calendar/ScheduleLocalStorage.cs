@@ -28,7 +28,7 @@ public class ScheduleLocalStorage : MonoBehaviour
             var entry = new ScheduledSession
             {
                 user_id = userId,
-                task_id = 0, // optional: update if you link it to a task table
+                task_id = session.task_id > 0 ? session.task_id : 0,
                 start_time = DateTime.Parse(session.start_time),
                 end_time = DateTime.Parse(session.end_time),
                 break_after = session.break_after

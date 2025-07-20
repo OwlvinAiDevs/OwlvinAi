@@ -140,7 +140,8 @@ async def generate_ai_schedule(request: StudyRequest, db: DBSession = Depends(ge
                 DBTask.user_id == int(request.user_id)
             ).first()
             if matched_task:
-                logging.info(f"[MATCH] Found task '{matched_task.title}' for user {request.user_id}")
+                s.task_id = matched_task.id
+                logging.debug(f"[MATCH] Found task '{matched_task.title}' with ID {matched_task.id} for user {request.user_id}")
                 db.add(DBScheduledSession(
                     user_id=int(request.user_id),
                     task_id=matched_task.id,

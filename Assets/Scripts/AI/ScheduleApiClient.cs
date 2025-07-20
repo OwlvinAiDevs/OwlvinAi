@@ -44,6 +44,7 @@ public class ScheduledTask
 public class SessionData
 {
     public ScheduledTask task;
+    public int task_id;
     public string start_time;
     public string end_time;
     public int break_after;

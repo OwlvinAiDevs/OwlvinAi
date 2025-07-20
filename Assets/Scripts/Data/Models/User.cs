@@ -1,18 +1,15 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+using System;
+using SQLite;
 
-public class User : MonoBehaviour
+[Table("users")]
+public class User
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    [PrimaryKey]
+    public int id { get; set; }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    public string username { get; set; }
+    [Unique]
+    public string email { get; set; }
+    public string auth_provider { get; set; }
+    public DateTime date_created { get; set; } = DateTime.UtcNow;
 }

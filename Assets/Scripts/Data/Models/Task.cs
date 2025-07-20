@@ -1,18 +1,20 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+using System;
+using SQLite;
 
-public class Task : MonoBehaviour
+[Table("tasks")]
+public class Task
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    [PrimaryKey, AutoIncrement]
+    public int id { get; set; }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    public string title { get; set; }
+    public string description { get; set; }
+    public DateTime created_at { get; set; } = DateTime.UtcNow;
+    public DateTime due_date { get; set; }
+    public int duration_minutes { get; set; }
+    public bool completed { get; set; } = false;
+    public string category { get; set; }
+
+    [Indexed]
+    public int user_id { get; set; }
 }

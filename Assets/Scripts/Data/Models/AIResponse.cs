@@ -1,18 +1,15 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+using System;
+using SQLite;
 
-public class AIResponse : MonoBehaviour
+[Table("ai_responses")]
+public class AIResponse
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    [PrimaryKey, AutoIncrement]
+    public int id { get; set; }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    [Indexed]
+    public int user_id { get; set; }
+
+    public DateTime timestamp { get; set; } = DateTime.UtcNow;
+    public string response_json { get; set; }
 }

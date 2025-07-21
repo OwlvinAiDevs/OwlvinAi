@@ -159,7 +159,8 @@ public class ScheduleApiClient : MonoBehaviour
 
             if (outputText != null)
             {
-                string cleanedText = ResponseFormatter.CleanGPTResponse(sb.ToString());
+                List<InferredTask> tasks;
+                string cleanedText = ResponseFormatter.CleanGPTResponse(sb.ToString(), out tasks);
                 outputText.text = "📅 AI-Generated Schedule:\n\n" + cleanedText;
             }
             else
@@ -234,7 +235,8 @@ public class ScheduleApiClient : MonoBehaviour
 
             if (outputText != null)
             {
-                string cleanedText = ResponseFormatter.CleanGPTResponse(sb.ToString());
+                List<InferredTask> tasks;
+                string cleanedText = ResponseFormatter.CleanGPTResponse(sb.ToString(), out tasks);
                 outputText.text = "📅 AI-Generated Schedule:\n\n" + cleanedText;
             }
             else

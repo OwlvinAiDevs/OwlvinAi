@@ -37,12 +37,13 @@ public static class ResponseFormatter
                 InferredTask[] tasks = JsonHelper.FromJson<InferredTask>(jsonBlock);
                 extractedTasks.AddRange(tasks);
             }
-            catch
+            catch (Exception e)
             {
-                // silently fail
+                Debug.LogError("❌ Failed to parse inferred tasks from GPT JSON block: " + e.Message);
+                Debug.Log("Raw JSON block:\n" + jsonBlock);
             }
         }
 
-        return naturalText; ;
+        return naturalText;
     }
 }

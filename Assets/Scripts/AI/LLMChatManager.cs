@@ -57,15 +57,12 @@ public class LLMChatManager : MonoBehaviour
         raw = raw.Replace("“", "\"").Replace("”", "\"")
              .Replace("‘", "'").Replace("’", "'");
 
-        // 3. (Optional) Sanitize Unicode: replace unsupported characters
-        raw = raw.Replace("\u25A1", "□"); // fallback for unknown glyphs
-
-        // 4. Separate text and JSON if needed
+        // 3. Separate text and JSON if needed
         int jsonStart = raw.IndexOf("[{");
         string naturalText = (jsonStart >= 0) ? raw.Substring(0, jsonStart).Trim() : raw.Trim();
         string jsonBlock = (jsonStart >= 0) ? raw.Substring(jsonStart).Trim() : "";
 
-        // 5. Reconstruct cleaned output
+        // 4. Reconstruct cleaned output
         string result = naturalText;
 
         if (!string.IsNullOrEmpty(jsonBlock))

@@ -45,6 +45,30 @@ public class LLMChatManager : MonoBehaviour
         }
     }
 
+    private string CleanGPTResponse(string raw)
+    {
+        if (string.IsNullOrEmpty(raw)) return "";
+
+        // Split response if there is a JSON block
+        int jsonStart = raw.IndexOf("[{");
+        string naturalText = (jsonStart >= 0) ? raw.Substring(0, jsonStart).Trim() : raw.Trim();
+        string jsonBlock = (jsonStart >= 0) ? raw.Substring(jsonStart).Trim() : "";
+
+        // Replace any problematic characters (fallback: emoji and fancy quotes)
+        naturalText = naturalText
+            .Replace("“", "\"")
+            .Replace("”", "\"")
+            .Replace("‘", "'")
+            .Replace("’", "'");
+
+        // Collapse JSON to a single line or highlight it
+        if (!string.IsNullOrEmpty(jsonBlock))
+        {
+            naturalText += "\n\n JSON Task Data:\n" + jsonBlock;
+        }
+        return naturalText;
+    }
+
     private IEnumerator SendChatPrompt(string userInput)
     {
         ChatPrompt prompt = new ChatPrompt

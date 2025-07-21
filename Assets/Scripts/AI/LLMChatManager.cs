@@ -81,7 +81,8 @@ public class LLMChatManager : MonoBehaviour
             ChatResponse response = JsonUtility.FromJson<ChatResponse>(jsonResponse);
             if (outputText != null)
             {
-                outputText.text = "🤖 GPT says:\n\n" + response.response;
+                string cleaned = CleanGPTResponse(response.response);
+                outputText.text = "🤖 GPT says:\n\n" + cleaned;
             }
         }
     }

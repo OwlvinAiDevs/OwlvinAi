@@ -246,38 +246,10 @@ async def chat(prompt: ChatPrompt, db: DBSession = Depends(get_db)):
             for t in user_state.tasks:
                 context += f"- {t.title} ({t.duration_minutes} mins, due {t.due_date.strftime('%Y-%m-%d %H:%M')}, category: {t.category})\n"
         
-        # Construct the final chat prompt
-        formatted_chat_prompt = (
-            "You are an AI assistant helping a user with their study schedule.\n"
-            "Respond helpfully to the user's question. If the user asks about scheduling, reference their study sessions.\n"
-            "If the user provides a freeform request like \"I need to study for 1 hour tonight\", break the task into 25-minute Pomodoro blocks with 5-minute breaks in between, and return each block as a separate session in JSON format.\n"
-            f"Today's date is {datetime.utcnow().date()}.\n"
-            f"{context}\n"
-            f"User says:\n\"{prompt.message}\"\n\n"
-            "Respond with:\n"
-            "- A helpful reply in natural language.\n"
-            "- If you inferred new tasks, also return with a plain JSON array of session dictionaries using this format (no markdown, no commentary):\n"
-            """Example format:
-[
-  {
-    "task": "Study physics",
-    "start": "2025-07-21T18:00:00",
-    "end": "2025-07-21T18:25:00",
-    "category": "Science"
-  },
-  {
-    "task": "Study physics",
-    "start": "2025-07-21T18:30:00",
-    "end": "2025-07-21T18:55:00",
-    "category": "Science"
-  }
-]
-"""
-            "Only include JSON if you inferred new tasks from the message."
-        )
-
-        gpt_response = await call_openai_api(formatted_chat_prompt)
+        final_prompt = format_chat_prompt(prompt.message, context)
+        gpt_response = await call_openai_api(final_prompt)
         return {"response": gpt_response}
+    
     except Exception as e:
         logging.error(f"[CHAT ERROR] {e}")
         raise HTTPException(status_code=500, detail="Error processing chat request")

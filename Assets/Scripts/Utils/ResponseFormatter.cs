@@ -8,7 +8,7 @@ public static class ResponseFormatter
             return "(Empty GPT response)";
 
         // Strip markdown/code formatting
-        raw = raw.Replace("```json", "").Replace("```", "");
+        raw = raw.Replace("```json", "").Replace("```", "").Trim();
 
         // Normalize smart quotes
         raw = raw.Replace("“", "\"").Replace("”", "\"")

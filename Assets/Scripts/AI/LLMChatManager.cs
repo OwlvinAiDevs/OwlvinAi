@@ -79,11 +79,22 @@ public class LLMChatManager : MonoBehaviour
             string jsonResponse = request.downloadHandler.text;
             Debug.Log("GPT response JSON: " + jsonResponse);
 
-            ChatResponse response = JsonUtility.FromJson<ChatResponse>(jsonResponse);
-            if (outputText != null)
+            try
             {
-                string cleaned = CleanGPTResponse(response.response);
-                outputText.text = "🤖 GPT says:\n\n" + cleaned;
+                ChatResponse response = JsonUtility.FromJson<ChatResponse>(jsonResponse);
+                if (outputText != null)
+                {
+                    string cleaned = CleanGPTResponse(response.response);
+                    outputText.text = "🤖 GPT says:\n\n" + cleaned;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Failed to parse GPT response: " + e.Message);
+                if (outputText != null)
+                {
+                    outputText.text = "⚠ Failed to read GPT response.";
+                }
             }
         }
     }

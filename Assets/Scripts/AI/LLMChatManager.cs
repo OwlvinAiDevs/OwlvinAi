@@ -15,9 +15,18 @@ public class ChatPrompt
 }
 
 [Serializable]
+public class InferredTask
+{
+    public string task;
+    public string start;
+    public string end;
+    public string category;
+}
+
+[Serializable]
 public class ChatResponse
 {
-    public string response;
+    public InferredTask[] response;
 }
 
 public class LLMChatManager : MonoBehaviour

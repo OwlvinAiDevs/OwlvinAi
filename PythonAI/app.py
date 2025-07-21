@@ -251,6 +251,7 @@ async def chat(prompt: ChatPrompt, db: DBSession = Depends(get_db)):
             "You are an AI assistant helping a user with their study schedule.\n"
             "Respond helpfully to the user's question. If the user asks about scheduling, reference their study sessions.\n"
             "If the user provides freeform info (e.g. 'I have a test tomorrow'), infer tasks and return them as JSON.\n\n"
+            f"Today's date is {datetime.utcnow().date()}.\n"
             f"{context}\n"
             f"User says:\n\"{prompt.message}\"\n\n"
             "Respond with:\n"
@@ -268,7 +269,7 @@ async def chat(prompt: ChatPrompt, db: DBSession = Depends(get_db)):
 """
             "Only include JSON if you inferred new tasks from the message."
         )
-        
+
         gpt_response = await call_openai_api(formatted_chat_prompt)
         return {"response": gpt_response}
     except Exception as e:

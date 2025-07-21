@@ -1,4 +1,16 @@
 using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+[Serializable]
+public class InferredTask
+{
+    public string task;
+    public string start;
+    public string end;
+    public string category;
+    public int break_after = 5; // Optional default fallback
+}
 
 public static class ResponseFormatter
 {

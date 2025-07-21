@@ -228,11 +228,47 @@ def get_scheduled_sessions(user_id: int, db: DBSession = Depends(get_db)):
 class ChatPrompt(BaseModel):
     user_id: int
     message: str
+    include_context: bool = False # Toggle to include user context in the prompt
 
 @app.post("/chat")
-async def chat(prompt: ChatPrompt):
+async def chat(prompt: ChatPrompt, db: DBSession = Depends(get_db)):
     try:
-        formatted_chat_prompt = f"User {prompt.user_id} says:\n\n{prompt.message}"
+        # Pull context if requested
+        context = ""
+        if prompt.include_context:
+            user_state: StudyRequest = get_user_state(prompt.user_id, db)
+
+            context += "📅 User's current schedule:\n"
+            for i, s in enumerate(user_state.available_slots):
+                context += f"- Slot {i+1}: {s.start_time.strftime('%a %I:%M %p')} to {s.end_time.strftime('%I:%M %p')}\n"
+            
+            context += "\n📚 User's current tasks:\n"
+            for t in user_state.tasks:
+                context += f"- {t.title} ({t.duration_minutes} mins, due {t.due_date.strftime('%Y-%m-%d %H:%M')}, category: {t.category})\n"
+        
+        # Construct the final chat prompt
+        formatted_chat_prompt = (
+            "You are an AI assistant helping a user with their study schedule.\n"
+            "Respond helpfully to the user's question. If the user asks about scheduling, reference their study sessions.\n"
+            "If the user provides freeform info (e.g. 'I have a test tomorrow'), infer tasks and return them as JSON.\n\n"
+            f"{context}\n"
+            f"User says:\n\"{prompt.message}\"\n\n"
+            "Respond with:\n"
+            "- A helpful reply in natural language.\n"
+            "- If you inferred new tasks, also return with a plain JSON array of session dictionaries using this format (no markdown, no commentary):\n"
+            """
+[
+    {
+        "task": "Complete Python project",
+        "start": "2025-07-13T09:00:00",
+        "end": "2025-07-13T09:25:00",
+        "category": "AI"
+    }
+]
+"""
+            "Only include JSON if you inferred new tasks from the message."
+        )
+        
         gpt_response = await call_openai_api(formatted_chat_prompt)
         return {"response": gpt_response}
     except Exception as e:

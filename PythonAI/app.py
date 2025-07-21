@@ -250,21 +250,27 @@ async def chat(prompt: ChatPrompt, db: DBSession = Depends(get_db)):
         formatted_chat_prompt = (
             "You are an AI assistant helping a user with their study schedule.\n"
             "Respond helpfully to the user's question. If the user asks about scheduling, reference their study sessions.\n"
-            "If the user provides freeform info (e.g. 'I have a test tomorrow'), infer tasks and return them as JSON.\n\n"
+            "If the user provides a freeform request like \"I need to study for 1 hour tonight\", break the task into 25-minute Pomodoro blocks with 5-minute breaks in between, and return each block as a separate session in JSON format.\n"
             f"Today's date is {datetime.utcnow().date()}.\n"
             f"{context}\n"
             f"User says:\n\"{prompt.message}\"\n\n"
             "Respond with:\n"
             "- A helpful reply in natural language.\n"
             "- If you inferred new tasks, also return with a plain JSON array of session dictionaries using this format (no markdown, no commentary):\n"
-            """
+            """Example format:
 [
-    {
-        "task": "Complete Python project",
-        "start": "2025-07-13T09:00:00",
-        "end": "2025-07-13T09:25:00",
-        "category": "AI"
-    }
+  {
+    "task": "Study physics",
+    "start": "2025-07-21T18:00:00",
+    "end": "2025-07-21T18:25:00",
+    "category": "Science"
+  },
+  {
+    "task": "Study physics",
+    "start": "2025-07-21T18:30:00",
+    "end": "2025-07-21T18:55:00",
+    "category": "Science"
+  }
 ]
 """
             "Only include JSON if you inferred new tasks from the message."

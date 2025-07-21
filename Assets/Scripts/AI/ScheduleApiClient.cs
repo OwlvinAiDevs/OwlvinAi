@@ -140,6 +140,8 @@ public class ScheduleApiClient : MonoBehaviour
 
             foreach (var session in schedule.sessions)
             {
+                if (session.task.title.ToLower().Contains("break") || session.task.category.ToLower().Contains("rest"))
+                    continue;
                 sb.AppendLine($"📝 Task: {session.task.title}");
                 sb.AppendLine($"📂 Category: {session.task.category}");
                 sb.AppendLine($"⏰ Start: {session.start_time}");
@@ -216,6 +218,9 @@ public class ScheduleApiClient : MonoBehaviour
 
             foreach (var session in schedule.sessions)
             {
+                if (session.task.title.ToLower().Contains("break") || session.task.category.ToLower().Contains("rest"))
+                    continue;
+
                 sb.AppendLine($"📝 Task: {session.task.title}");
                 sb.AppendLine($"📂 Category: {session.task.category}");
                 sb.AppendLine($"⏰ Start: {session.start_time}");

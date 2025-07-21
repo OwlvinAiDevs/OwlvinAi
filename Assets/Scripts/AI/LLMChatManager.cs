@@ -89,6 +89,9 @@ public class LLMChatManager : MonoBehaviour
 
                     foreach (var inferred in response.response)
                     {
+                        if (inferred.task.ToLower().Contains("break") || inferred.category.ToLower().Contains("rest"))
+                            continue;
+
                         sb.AppendLine($"📝 Task: {inferred.task}");
                         sb.AppendLine($"📂 Category: {inferred.category}");
                         sb.AppendLine($"⏰ Start: {inferred.start}");

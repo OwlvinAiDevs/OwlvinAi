@@ -15,15 +15,6 @@ public class ChatPrompt
 }
 
 [Serializable]
-public class InferredTask
-{
-    public string task;
-    public string start;
-    public string end;
-    public string category;
-}
-
-[Serializable]
 public class ChatResponse
 {
     public InferredTask[] response;
@@ -92,29 +83,24 @@ public class LLMChatManager : MonoBehaviour
             try
             {
                 ChatResponse response = JsonUtility.FromJson<ChatResponse>(jsonResponse);
-                if (outputText != null)
+                if (outputText != null && response.response != null && response.response.Length > 0)
                 {
-                    List<InferredTask> inferred;
-                    string cleaned = CleanGPTResponse(response.response, out inferred);
-
                     System.Text.StringBuilder sb = new System.Text.StringBuilder();
-                    sb.AppendLine("🤖 GPT says:\n");
-                    sb.AppendLine(cleaned);
 
-                    if (inferred != null && inferred.Count > 0)
+                    foreach (var inferred in response.response)
                     {
-                        sb.AppendLine("\n📦 Inferred Tasks:");
-                        foreach (var task in inferred)
-                        {
-                            sb.AppendLine($"📝 Task: {task.task}");
-                            sb.AppendLine($"📂 Category: {task.category}");
-                            sb.AppendLine($"⏰ Start: {task.start}");
-                            sb.AppendLine($"⏱ End: {task.end}");
-                            sb.AppendLine($"☕ Break After: {task.break_after} minutes");
-                            sb.AppendLine();
-                        }
+                        sb.AppendLine($"📝 Task: {inferred.task}");
+                        sb.AppendLine($"📂 Category: {inferred.category}");
+                        sb.AppendLine($"⏰ Start: {inferred.start}");
+                        sb.AppendLine($"⏱ End: {inferred.end}");
+                        sb.AppendLine($"☕ Break After: 5 minutes\n");
                     }
-                    outputText.text = sb.ToString();
+
+                    outputText.text = "📅 AI-Generated Schedule:\n\n" + sb.ToString();
+                }
+                else
+                {
+                    outputText.text = "⚠ GPT returned no tasks.";
                 }
             }
             catch (Exception e)

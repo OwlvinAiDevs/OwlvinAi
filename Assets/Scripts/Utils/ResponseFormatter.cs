@@ -39,7 +39,7 @@ public static class ResponseFormatter
             }
             catch (Exception e)
             {
-                Debug.LogError("❌ Failed to parse inferred tasks from GPT JSON block: " + e.Message);
+                Debug.LogError("❌ Failed to parse inferred tasks from GPT JSON block: " + e);
                 Debug.Log("Raw JSON block:\n" + jsonBlock);
             }
         }

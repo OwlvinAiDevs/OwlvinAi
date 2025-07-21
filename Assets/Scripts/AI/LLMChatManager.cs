@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
 using TMPro;
+using static ResponseFormatter;
 
 [Serializable]
 public class ChatPrompt
@@ -43,34 +44,6 @@ public class LLMChatManager : MonoBehaviour
                 outputText.text = "⚠ Please enter a message before submitting.";
             }
         }
-    }
-
-    private string CleanGPTResponse(string raw)
-    {
-        if (string.IsNullOrEmpty(raw))
-            return "(Empty GPT response)";
-
-        // 1. Strip triple backticks
-        raw = raw.Replace("```json", "").Replace("```", "");
-
-        // 2. Normalize smart quotes
-        raw = raw.Replace("“", "\"").Replace("”", "\"")
-             .Replace("‘", "'").Replace("’", "'");
-
-        // 3. Separate text and JSON if needed
-        int jsonStart = raw.IndexOf("[{");
-        string naturalText = (jsonStart >= 0) ? raw.Substring(0, jsonStart).Trim() : raw.Trim();
-        string jsonBlock = (jsonStart >= 0) ? raw.Substring(jsonStart).Trim() : "";
-
-        // 4. Reconstruct cleaned output
-        string result = naturalText;
-
-        if (!string.IsNullOrEmpty(jsonBlock))
-        {
-            result += "\n\n📦 Inferred Task:\n" + jsonBlock;
-        }
-
-        return result;
     }
 
     private IEnumerator SendChatPrompt(string userInput)

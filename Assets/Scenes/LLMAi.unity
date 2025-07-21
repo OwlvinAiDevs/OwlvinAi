@@ -1362,7 +1362,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1897473915}
+      - m_Target: {fileID: 1897473918}
         m_TargetAssemblyTypeName: ScheduleTrigger, Assembly-CSharp
         m_MethodName: TriggerSchedule
         m_Mode: 1
@@ -2713,8 +2713,9 @@ GameObject:
   m_Component:
   - component: {fileID: 1897473914}
   - component: {fileID: 1897473913}
-  - component: {fileID: 1897473915}
   - component: {fileID: 1897473916}
+  - component: {fileID: 1897473917}
+  - component: {fileID: 1897473918}
   m_Layer: 0
   m_Name: ScheduleManager
   m_TagString: Untagged
@@ -2750,20 +2751,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1897473915
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1897473912}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7527fa50d75eb54079efdbae7c99a7ed, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  scheduleClient: {fileID: 1897473913}
-  userId: 1
 --- !u!114 &1897473916
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2778,6 +2765,32 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   aiOutputText: {fileID: 724420639}
   timeoutSeconds: 30
+--- !u!114 &1897473917
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1897473912}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68862067021f1bdd6bcc962faf233bf9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1897473918
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1897473912}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7527fa50d75eb54079efdbae7c99a7ed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scheduleClient: {fileID: 1897473913}
+  userId: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

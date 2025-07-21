@@ -50,12 +50,25 @@ class Session(BaseModel):
         break_after: Suggested break duration after the session in minutes.
     """
     task: TaskSchema
+    task_id: Optional[int] = None  # For database compatibility
     start_time: datetime
     end_time: datetime
     break_after: Optional[int] = 5 # Default break time after each session in minutes
 
     def __repr__(self):
         return f"Session(task={self.task.title}, start={self.start_time.strftime('%H:%M')}, end={self.end_time.strftime('%H:%M')}, break_after={self.break_after} min)"
+
+class CreateScheduledSession(BaseModel):
+    user_id: int
+    task_id: int
+    start_time: datetime
+    end_time: datetime
+    break_after: Optional[int] = 5
+
+class ScheduledSessionOut(BaseModel):
+    id: int
+    class Config:
+        orm_mode = True
 
 class ScheduleResponse(BaseModel):
     """
@@ -125,6 +138,18 @@ class SessionLog(Base):
 
     user = relationship("User", backref="session_logs")
     task = relationship("Task", backref="session_logs")
+
+class ScheduledSession(Base):
+    __tablename__ = 'scheduled_sessions'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    task_id = Column(Integer, ForeignKey('tasks.id'))
+    start_time = Column(DateTime, index=True)
+    end_time = Column(DateTime, index=True)
+    break_after = Column(Integer, default=5)  # Break time in minutes
+
+    user = relationship("User", backref="scheduled_sessions")
+    task = relationship("Task", backref="scheduled_sessions")
 
 class EnergyLevel(Base):
     __tablename__ = 'energy_levels'

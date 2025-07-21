@@ -8,7 +8,8 @@ from utils import parse_llm_response, get_user_state, recalculate_cached_availab
 from database import init_db, SessionLocal
 from pydantic import BaseModel
 from sqlalchemy.orm import Session as DBSession
-from models import StudyRequest, ScheduleResponse, User, BlockedTime, EnergyLevel, CachedAvailability, Task as DBTask, SessionLog as DBSessionLog
+from models import StudyRequest, ScheduleResponse, User, BlockedTime, EnergyLevel, CreateScheduledSession, ScheduledSessionOut
+from models import Task as DBTask, SessionLog as DBSessionLog, ScheduledSession as DBScheduledSession
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -111,7 +112,7 @@ def schedule(request: StudyRequest):
     return generate_schedule(request)
 
 @app.post("/generate_ai_schedule", response_model=ScheduleResponse)
-async def generate_ai_schedule(request: StudyRequest):
+async def generate_ai_schedule(request: StudyRequest, db: DBSession = Depends(get_db)):
     try:
         logging.info(f"[START] /generate_ai_schedule for user_id={request.user_id}")
         logging.debug(f"Request JSON: {request.model_dump_json()}")
@@ -128,6 +129,32 @@ async def generate_ai_schedule(request: StudyRequest):
         sessions = parse_llm_response(gpt_response)
         logging.info(f"Parsed {len(sessions)} sessions from GPT response")
 
+        # Clear old scheduled sessions for this user
+        deleted = db.query(DBScheduledSession).filter(DBScheduledSession.user_id == int(request.user_id)).delete()
+        logging.info(f"[CLEANUP] Deleted {deleted} previous scheduled sessions for user {request.user_id}")
+
+        # Persist AI-generated sessions into scheduled_sessions table
+        for s in sessions:
+            matched_task = db.query(DBTask).filter(
+                DBTask.title == s.task.title,
+                DBTask.user_id == int(request.user_id)
+            ).first()
+            if matched_task:
+                s.task_id = matched_task.id
+                logging.debug(f"[MATCH] Found task '{matched_task.title}' with ID {matched_task.id} for user {request.user_id}")
+                db.add(DBScheduledSession(
+                    user_id=int(request.user_id),
+                    task_id=matched_task.id,
+                    start_time=s.start_time,
+                    end_time=s.end_time,
+                    break_after=s.break_after or 5
+                ))
+            else:
+                logging.warning(f"[MISS] Task '{s.task.title}' not found in DB for user {request.user_id}")
+        db.commit()
+        logging.info("[COMMIT] Scheduled sessions saved to database")
+
+        # Metrics and response formatting
         total_study_time = sum([s.task.duration_minutes for s in sessions])
         total_break_time = sum([s.break_after for s in sessions if s.break_after])
         scheduled_titles = {s.task.title for s in sessions}
@@ -156,6 +183,19 @@ async def generate_ai_schedule(request: StudyRequest):
         fallback.message = "AI scheduling failed. Rule-based scheduling used instead."
         fallback.success = False
         return fallback
+
+@app.post("/schedule_session", response_model=ScheduledSessionOut)
+def create_scheduled_session(session: CreateScheduledSession, db: DBSession = Depends(get_db)):
+    db_session = DBScheduledSession(**session.model_dump())
+    db.add(db_session)
+    db.commit()
+    db.refresh(db_session)
+    logging.info(f"Scheduled session created: {db_session.id} for user {session.user_id}")
+    return db_session
+
+@app.get("/scheduled_sessions", response_model=List[ScheduledSessionOut])
+def get_scheduled_sessions(user_id: int, db: DBSession = Depends(get_db)):
+    return db.query(DBScheduledSession).filter(DBScheduledSession.user_id == user_id).all()
 
 # --- Task Management Endpoints ---
 

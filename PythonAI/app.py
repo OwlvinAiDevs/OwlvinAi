@@ -197,6 +197,10 @@ def create_scheduled_session(session: CreateScheduledSession, db: DBSession = De
 def get_scheduled_sessions(user_id: int, db: DBSession = Depends(get_db)):
     return db.query(DBScheduledSession).filter(DBScheduledSession.user_id == user_id).all()
 
+class ChatPrompt(BaseModel):
+    user_id: int
+    message: str
+
 # --- Task Management Endpoints ---
 
 class CreateTask(BaseModel):

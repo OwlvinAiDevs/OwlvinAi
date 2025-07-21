@@ -115,7 +115,6 @@ def schedule(request: StudyRequest):
 
 @app.post("/generate_ai_schedule", response_model=ScheduleResponse)
 async def generate_ai_schedule(request: StudyRequest, db: DBSession = Depends(get_db)):
-async def generate_ai_schedule(request: StudyRequest, db: DBSession = Depends(get_db)):
     try:
         logging.info(f"[START] /generate_ai_schedule for user_id={request.user_id}")
         logging.debug(f"Request JSON: {request.model_dump_json()}")
@@ -229,6 +228,16 @@ def get_scheduled_sessions(user_id: int, db: DBSession = Depends(get_db)):
 class ChatPrompt(BaseModel):
     user_id: int
     message: str
+
+@app.post("/chat")
+async def chat(prompt: ChatPrompt):
+    try:
+        formatted_chat_prompt = f"User {prompt.user_id} says:\n\n{prompt.message}"
+        gpt_response = await call_openai_api(formatted_chat_prompt)
+        return {"response": gpt_response}
+    except Exception as e:
+        logging.error(f"[CHAT ERROR] {e}")
+        raise HTTPException(status_code=500, detail="Error processing chat request")
 
 # --- Task Management Endpoints ---
 

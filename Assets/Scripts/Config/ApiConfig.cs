@@ -7,6 +7,7 @@ public static class ApiConfig
         public const string GenerateSchedule = "/generate_ai_schedule";
         public const string Ping = "/ping";
         public const string GetUserState = "/user_state";
+        public const string Chat = "/chat";
     }
 
     public static string GetFullUrl(string endpoint)

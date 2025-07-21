@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 from fastapi import FastAPI, HTTPException, Depends
 from contextlib import asynccontextmanager
-from ai_model import generate_schedule, format_schedule_prompt, call_openai_api
+from ai_model import generate_schedule, format_schedule_prompt, format_chat_prompt, call_openai_api
 from utils import parse_llm_response, get_user_state, recalculate_cached_availability
 from database import init_db, SessionLocal
 from pydantic import BaseModel

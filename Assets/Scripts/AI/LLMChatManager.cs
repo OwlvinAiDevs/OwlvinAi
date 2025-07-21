@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using TMPro;
 using static ResponseFormatter;
+using System.Collections.Generic;
 
 [Serializable]
 public class ChatPrompt
@@ -84,8 +85,27 @@ public class LLMChatManager : MonoBehaviour
                 ChatResponse response = JsonUtility.FromJson<ChatResponse>(jsonResponse);
                 if (outputText != null)
                 {
-                    string cleaned = CleanGPTResponse(response.response);
-                    outputText.text = "🤖 GPT says:\n\n" + cleaned;
+                    List<InferredTask> inferred;
+                    string cleaned = CleanGPTResponse(response.response, out inferred);
+
+                    System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                    sb.AppendLine("🤖 GPT says:\n");
+                    sb.AppendLine(cleaned);
+
+                    if (inferred != null && inferred.Count > 0)
+                    {
+                        sb.AppendLine("\n📦 Inferred Tasks:");
+                        foreach (var task in inferred)
+                        {
+                            sb.AppendLine($"📝 Task: {task.task}");
+                            sb.AppendLine($"📂 Category: {task.category}");
+                            sb.AppendLine($"⏰ Start: {task.start}");
+                            sb.AppendLine($"⏱ End: {task.end}");
+                            sb.AppendLine($"☕ Break After: {task.break_after} minutes");
+                            sb.AppendLine();
+                        }
+                    }
+                    outputText.text = sb.ToString();
                 }
             }
             catch (Exception e)

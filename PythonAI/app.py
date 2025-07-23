@@ -3,11 +3,13 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 from fastapi import FastAPI, HTTPException, Depends
 from contextlib import asynccontextmanager
-from ai_model import generate_schedule, format_schedule_prompt, call_openai_api
+from ai_model import generate_schedule, format_schedule_prompt, format_chat_prompt, call_openai_api
 from utils import parse_llm_response, get_user_state, recalculate_cached_availability
 from database import init_db, SessionLocal
 from pydantic import BaseModel
 from sqlalchemy.orm import Session as DBSession
+from models import StudyRequest, ScheduleResponse, User, BlockedTime, EnergyLevel, CreateScheduledSession, ScheduledSessionOut
+from models import Task as DBTask, SessionLog as DBSessionLog, ScheduledSession as DBScheduledSession
 from models import StudyRequest, ScheduleResponse, User, BlockedTime, EnergyLevel, CreateScheduledSession, ScheduledSessionOut
 from models import Task as DBTask, SessionLog as DBSessionLog, ScheduledSession as DBScheduledSession
 
@@ -155,6 +157,32 @@ async def generate_ai_schedule(request: StudyRequest, db: DBSession = Depends(ge
         logging.info("[COMMIT] Scheduled sessions saved to database")
 
         # Metrics and response formatting
+        # Clear old scheduled sessions for this user
+        deleted = db.query(DBScheduledSession).filter(DBScheduledSession.user_id == int(request.user_id)).delete()
+        logging.info(f"[CLEANUP] Deleted {deleted} previous scheduled sessions for user {request.user_id}")
+
+        # Persist AI-generated sessions into scheduled_sessions table
+        for s in sessions:
+            matched_task = db.query(DBTask).filter(
+                DBTask.title == s.task.title,
+                DBTask.user_id == int(request.user_id)
+            ).first()
+            if matched_task:
+                s.task_id = matched_task.id
+                logging.debug(f"[MATCH] Found task '{matched_task.title}' with ID {matched_task.id} for user {request.user_id}")
+                db.add(DBScheduledSession(
+                    user_id=int(request.user_id),
+                    task_id=matched_task.id,
+                    start_time=s.start_time,
+                    end_time=s.end_time,
+                    break_after=s.break_after or 5
+                ))
+            else:
+                logging.warning(f"[MISS] Task '{s.task.title}' not found in DB for user {request.user_id}")
+        db.commit()
+        logging.info("[COMMIT] Scheduled sessions saved to database")
+
+        # Metrics and response formatting
         total_study_time = sum([s.task.duration_minutes for s in sessions])
         total_break_time = sum([s.break_after for s in sessions if s.break_after])
         scheduled_titles = {s.task.title for s in sessions}
@@ -196,6 +224,35 @@ def create_scheduled_session(session: CreateScheduledSession, db: DBSession = De
 @app.get("/scheduled_sessions", response_model=List[ScheduledSessionOut])
 def get_scheduled_sessions(user_id: int, db: DBSession = Depends(get_db)):
     return db.query(DBScheduledSession).filter(DBScheduledSession.user_id == user_id).all()
+
+class ChatPrompt(BaseModel):
+    user_id: int
+    message: str
+    include_context: bool = False # Toggle to include user context in the prompt
+
+@app.post("/chat")
+async def chat(prompt: ChatPrompt, db: DBSession = Depends(get_db)):
+    try:
+        # Pull context if requested
+        context = ""
+        if prompt.include_context:
+            user_state: StudyRequest = get_user_state(prompt.user_id, db)
+
+            context += "📅 User's current schedule:\n"
+            for i, s in enumerate(user_state.available_slots):
+                context += f"- Slot {i+1}: {s.start_time.strftime('%a %I:%M %p')} to {s.end_time.strftime('%I:%M %p')}\n"
+            
+            context += "\n📚 User's current tasks:\n"
+            for t in user_state.tasks:
+                context += f"- {t.title} ({t.duration_minutes} mins, due {t.due_date.strftime('%Y-%m-%d %H:%M')}, category: {t.category})\n"
+        
+        final_prompt = format_chat_prompt(prompt.message, context)
+        gpt_response = await call_openai_api(final_prompt)
+        return {"response": gpt_response}
+    
+    except Exception as e:
+        logging.error(f"[CHAT ERROR] {e}")
+        raise HTTPException(status_code=500, detail="Error processing chat request")
 
 # --- Task Management Endpoints ---
 

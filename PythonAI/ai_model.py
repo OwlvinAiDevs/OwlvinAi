@@ -6,7 +6,7 @@ import asyncio
 import logging
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import List
 from models import StudyRequest, Session, ScheduleResponse
 
@@ -105,6 +105,40 @@ def format_schedule_prompt(request: StudyRequest) -> str:
 ]
 """)
     return "\n".join(lines)
+
+def format_chat_prompt(message: str, context: str = "") -> str:
+    """
+    Formats the chat prompt for OpenAI API.
+    """
+    formatted_prompt = (
+        "You are an AI assistant helping a user with their study schedule.\n"
+        "Respond helpfully to the user's question. If the user asks about scheduling, reference their study sessions.\n"
+        "If the user provides a freeform request like \"I need to study for 1 hour tonight\", break the task into 25-minute Pomodoro blocks with 5-minute breaks in between, and return each block as a separate session in JSON format.\n"
+        f"Today's date is {datetime.utcnow().date()}.\n"
+        f"{context}\n"
+        f"User says:\n\"{message}\"\n\n"
+        "Respond with:\n"
+        "- A helpful reply in natural language.\n"
+        "- If you inferred new tasks, also return with a plain JSON array of session dictionaries using this format (no markdown, no commentary):\n"
+        """Example format:
+[
+  {
+    "task": "Study physics",
+    "start": "2025-07-21T18:00:00",
+    "end": "2025-07-21T18:25:00",
+    "category": "Science"
+  },
+  {
+    "task": "Study physics",
+    "start": "2025-07-21T18:30:00",
+    "end": "2025-07-21T18:55:00",
+    "category": "Science"
+  }
+]
+"""
+        "Only include JSON if you inferred new tasks from the message."
+    )
+    return formatted_prompt
 
 
 async def call_openai_api(prompt: str, max_retries: int = 3, delay: float = 2.0) -> List[dict]:

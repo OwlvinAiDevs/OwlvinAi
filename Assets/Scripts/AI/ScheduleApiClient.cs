@@ -140,6 +140,8 @@ public class ScheduleApiClient : MonoBehaviour
 
             foreach (var session in schedule.sessions)
             {
+                if (session.task.title.ToLower().Contains("break") || session.task.category.ToLower().Contains("rest"))
+                    continue;
                 sb.AppendLine($"📝 Task: {session.task.title}");
                 sb.AppendLine($"📂 Category: {session.task.category}");
                 sb.AppendLine($"⏰ Start: {session.start_time}");
@@ -159,7 +161,9 @@ public class ScheduleApiClient : MonoBehaviour
 
             if (outputText != null)
             {
-                outputText.text = sb.ToString(); // Display result in ScrollView
+                List<InferredTask> tasks;
+                string cleanedText = ResponseFormatter.CleanGPTResponse(sb.ToString(), out tasks);
+                outputText.text = "📅 AI-Generated Schedule:\n\n" + cleanedText;
             }
             else
             {
@@ -214,6 +218,9 @@ public class ScheduleApiClient : MonoBehaviour
 
             foreach (var session in schedule.sessions)
             {
+                if (session.task.title.ToLower().Contains("break") || session.task.category.ToLower().Contains("rest"))
+                    continue;
+
                 sb.AppendLine($"📝 Task: {session.task.title}");
                 sb.AppendLine($"📂 Category: {session.task.category}");
                 sb.AppendLine($"⏰ Start: {session.start_time}");
@@ -233,7 +240,9 @@ public class ScheduleApiClient : MonoBehaviour
 
             if (outputText != null)
             {
-                outputText.text = sb.ToString(); // Display result in ScrollView
+                List<InferredTask> tasks;
+                string cleanedText = ResponseFormatter.CleanGPTResponse(sb.ToString(), out tasks);
+                outputText.text = "📅 AI-Generated Schedule:\n\n" + cleanedText;
             }
             else
             {

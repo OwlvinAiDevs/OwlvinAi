@@ -18,6 +18,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Calendar.unity
     guid: 9dfe6b3df47ebc44a94fd37e6ccd1eae
   - enabled: 1
+    path: Assets/Scenes/Clock.unity
+    guid: 6f47e8173fba40d46b5ac9eadb53e24c
+  - enabled: 1
     path: Assets/Scenes/LLMAi.unity
     guid: 9af0c2eb8fa711147b003eab6e678d7c
   - enabled: 1

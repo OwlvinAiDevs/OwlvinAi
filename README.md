@@ -91,9 +91,9 @@ This project is currently shared within the scope of a team project and is not y
 |-----------------------|----------------------------------|
 | Ai Calendar Notes         | 🔧 Under integration            |
 | Ai Chat Logs          | 🔧 Under integration            |
-| Pomodoro Timer        | ✅ UI functional, backend Under integration    |
+| Pomodoro Timer        | ✅ Implemented    |
 | Custom Ai Promting       | 🔧 Under integration          |
-| Variable amount of daily notes | 🔧 Under integration          |
+| Variable amount of daily notes | ✅ Implemented        |
 | Google Calendar sync  | 🔧 Under integration          |
 
 
@@ -103,8 +103,8 @@ This project is currently shared within the scope of a team project and is not y
 |-----------------------|----------------------------------|
 | Homepage UI           | ✅ Implemented                   |
 | Navigation            | ✅ Implemented                   |
-| Pomodoro Timer        | ✅ UI functional, backend TBD     |
-| Calendar View         | 🔧 Under integration              |
+| Pomodoro Timer        | ✅ Implemented    |
+| Calendar View         | ✅ Implemented             |
 | AI Scheduling (Stub)  | ✅ JSON mock working              |
 | Unity ↔ Python Comm   | ✅ Using deployed Render server   |
 

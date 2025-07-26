@@ -1362,7 +1362,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1897473915}
+      - m_Target: {fileID: 1897473918}
         m_TargetAssemblyTypeName: ScheduleTrigger, Assembly-CSharp
         m_MethodName: TriggerSchedule
         m_Mode: 1
@@ -2040,6 +2040,54 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4754040645041878398, guid: c4665c2d7ffc4da4faa25321f45b62ba, type: 3}
   m_PrefabInstance: {fileID: 1423846364}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1448900385
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1448900387}
+  - component: {fileID: 1448900386}
+  m_Layer: 0
+  m_Name: LLMChatManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1448900386
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1448900385}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cad800d7b75b07f23abbbe99d19590f7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  inputField: {fileID: 1260548851}
+  outputText: {fileID: 724420639}
+  userId: 1
+  includeContext: 0
+--- !u!4 &1448900387
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1448900385}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.852417, z: 50.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1596167259
 GameObject:
   m_ObjectHideFlags: 0
@@ -2713,8 +2761,9 @@ GameObject:
   m_Component:
   - component: {fileID: 1897473914}
   - component: {fileID: 1897473913}
-  - component: {fileID: 1897473915}
   - component: {fileID: 1897473916}
+  - component: {fileID: 1897473917}
+  - component: {fileID: 1897473918}
   m_Layer: 0
   m_Name: ScheduleManager
   m_TagString: Untagged
@@ -2750,20 +2799,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1897473915
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1897473912}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7527fa50d75eb54079efdbae7c99a7ed, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  scheduleClient: {fileID: 1897473913}
-  userId: 1
 --- !u!114 &1897473916
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2778,6 +2813,34 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   aiOutputText: {fileID: 724420639}
   timeoutSeconds: 30
+--- !u!114 &1897473917
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1897473912}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68862067021f1bdd6bcc962faf233bf9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1897473918
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1897473912}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7527fa50d75eb54079efdbae7c99a7ed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scheduleClient: {fileID: 1897473913}
+  chatManager: {fileID: 1448900386}
+  chatInputField: {fileID: 1260548851}
+  userId: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -2787,3 +2850,4 @@ SceneRoots:
   - {fileID: 1250840169}
   - {fileID: 1840958460}
   - {fileID: 1897473914}
+  - {fileID: 1448900387}

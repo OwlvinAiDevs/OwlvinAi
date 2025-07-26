@@ -44,6 +44,7 @@ public class ScheduledTask
 public class SessionData
 {
     public ScheduledTask task;
+    public int task_id;
     public string start_time;
     public string end_time;
     public int break_after;
@@ -121,12 +122,26 @@ public class ScheduleApiClient : MonoBehaviour
         else
         {
             ScheduleResponse schedule = JsonUtility.FromJson<ScheduleResponse>(postRequest.downloadHandler.text);
+
+            // Save schedule locally after successful retrieval
+            var localSaver = FindObjectOfType<ScheduleLocalStorage>();
+            if (localSaver != null)
+            {
+                localSaver.SaveScheduleLocally(schedule);
+            }
+            else
+            {
+                Debug.LogWarning("⚠ ScheduleLocalStorage not found in scene. Skipping local save.");
+            }
+
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
             sb.AppendLine($"Parsed Schedule for: {schedule.user_id}");
             sb.AppendLine($"Total Sessions: {schedule.sessions.Count}");
 
             foreach (var session in schedule.sessions)
             {
+                if (session.task.title.ToLower().Contains("break") || session.task.category.ToLower().Contains("rest"))
+                    continue;
                 sb.AppendLine($"📝 Task: {session.task.title}");
                 sb.AppendLine($"📂 Category: {session.task.category}");
                 sb.AppendLine($"⏰ Start: {session.start_time}");
@@ -146,7 +161,9 @@ public class ScheduleApiClient : MonoBehaviour
 
             if (outputText != null)
             {
-                outputText.text = sb.ToString(); // Display result in ScrollView
+                List<InferredTask> tasks;
+                string cleanedText = ResponseFormatter.CleanGPTResponse(sb.ToString(), out tasks);
+                outputText.text = "📅 AI-Generated Schedule:\n\n" + cleanedText;
             }
             else
             {
@@ -201,6 +218,9 @@ public class ScheduleApiClient : MonoBehaviour
 
             foreach (var session in schedule.sessions)
             {
+                if (session.task.title.ToLower().Contains("break") || session.task.category.ToLower().Contains("rest"))
+                    continue;
+
                 sb.AppendLine($"📝 Task: {session.task.title}");
                 sb.AppendLine($"📂 Category: {session.task.category}");
                 sb.AppendLine($"⏰ Start: {session.start_time}");
@@ -220,7 +240,9 @@ public class ScheduleApiClient : MonoBehaviour
 
             if (outputText != null)
             {
-                outputText.text = sb.ToString(); // Display result in ScrollView
+                List<InferredTask> tasks;
+                string cleanedText = ResponseFormatter.CleanGPTResponse(sb.ToString(), out tasks);
+                outputText.text = "📅 AI-Generated Schedule:\n\n" + cleanedText;
             }
             else
             {

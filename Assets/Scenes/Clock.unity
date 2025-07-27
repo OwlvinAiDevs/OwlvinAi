@@ -800,6 +800,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 523940153}
+  - component: {fileID: 523940155}
   m_Layer: 0
   m_Name: Timer
   m_TagString: Untagged
@@ -826,6 +827,18 @@ Transform:
   - {fileID: 765353905}
   m_Father: {fileID: 1515221180}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!225 &523940155
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 523940152}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &587562368
 GameObject:
   m_ObjectHideFlags: 0
@@ -2995,6 +3008,8 @@ GameObject:
   - component: {fileID: 1559596903}
   - component: {fileID: 1559596902}
   - component: {fileID: 1559596901}
+  - component: {fileID: 1559596905}
+  - component: {fileID: 1559596906}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -3085,6 +3100,30 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &1559596905
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1559596900}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc5cd9ec89aed2d4bb261de098deacfe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!225 &1559596906
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1559596900}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1567058368
 GameObject:
   m_ObjectHideFlags: 0

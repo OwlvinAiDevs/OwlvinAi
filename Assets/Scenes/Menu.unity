@@ -945,7 +945,7 @@ MonoBehaviour:
   m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 1
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 1000, y: 3000}
+  m_ReferenceResolution: {x: 1421, y: 3000}
   m_ScreenMatchMode: 1
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
@@ -1007,6 +1007,7 @@ GameObject:
   - component: {fileID: 1030122636}
   - component: {fileID: 1030122635}
   - component: {fileID: 1030122634}
+  - component: {fileID: 1030122637}
   m_Layer: 0
   m_Name: EventSystem
   m_TagString: Untagged
@@ -1064,6 +1065,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1030122637
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1030122633}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82d2f492086406645a62b27ea51bbf1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1745930482
 GameObject:
   m_ObjectHideFlags: 0
@@ -1229,6 +1242,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4400fa2a41743e14cac332d5598722cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  outputText: {fileID: 0}
 --- !u!4 &1937370752
 Transform:
   m_ObjectHideFlags: 0

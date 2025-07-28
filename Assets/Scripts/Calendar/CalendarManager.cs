@@ -2,6 +2,8 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
+using System.Linq;
 
 public class CalendarManager : MonoBehaviour
 {
@@ -18,6 +20,8 @@ public class CalendarManager : MonoBehaviour
     public TextMeshProUGUI noteDisplayText;
     public Button saveNoteButton;
     public Button clearNoteButton;
+
+    public TextMeshProUGUI googleEventsText;
 
     private DateTime currentDate;
     private int todayDay;
@@ -42,13 +46,22 @@ public class CalendarManager : MonoBehaviour
         GenerateCalendar(currentDate.Year, currentDate.Month);
     }
 
-    void GenerateCalendar(int year, int month)
+    async void GenerateCalendar(int year, int month)
     {
         monthLabel.text = $"{year}\n{new DateTime(year, month, 1):MMMM}";
         clickedTodayThisMonth = false;
 
         foreach (Transform child in dayGrid)
             Destroy(child.gameObject);
+
+        // Fetch events from Google Calendar for the current month
+        List<Google.Apis.Calendar.v3.Data.Event> monthEvents = new List<Google.Apis.Calendar.v3.Data.Event>();
+        if (GoogleAuthenticator.IsAuthenticated)
+        {
+            DateTime firstDayOfMonth = new DateTime(year, month, 1);
+            // Fetch events for the entire visible month
+            monthEvents = await GoogleCalendarManager.GetCalendarEventsAsync(firstDayOfMonth, firstDayOfMonth.AddMonths(1));
+        }
 
         int daysInMonth = DateTime.DaysInMonth(year, month);
         int startDay = (int)new DateTime(year, month, 1).DayOfWeek;
@@ -66,6 +79,17 @@ public class CalendarManager : MonoBehaviour
             TextMeshProUGUI dayText = cell.GetComponentInChildren<TextMeshProUGUI>();
             dayText.text = day.ToString();
 
+            // Check for events on this day
+            DateTime currentDay = new DateTime(year, month, day);
+            bool hasEvent = monthEvents.Any(e => e.Start.DateTimeDateTimeOffset.HasValue && e.Start.DateTimeDateTimeOffset.Value.Date == currentDay.Date);
+
+            // Activate event indicator if there are events
+            var eventIndicator = cell.transform.Find("EventIndicator");
+            if (eventIndicator != null)
+            {
+                eventIndicator.gameObject.SetActive(hasEvent);
+            }
+
             int capturedDay = day;
             cell.GetComponent<Button>().onClick.AddListener(() => OnDayClicked(capturedDay));
 
@@ -82,7 +106,7 @@ public class CalendarManager : MonoBehaviour
         }
     }
 
-    void OnDayClicked(int day)
+    async void OnDayClicked(int day)
     {
         DateTime clickedDate = new DateTime(currentDate.Year, currentDate.Month, day);
         currentDateKey = clickedDate.ToString("yyyy-MM-dd");
@@ -98,6 +122,68 @@ public class CalendarManager : MonoBehaviour
         string savedNote = PlayerPrefs.GetString(currentDateKey, "");
         noteInputField.text = savedNote;
         noteDisplayText.text = string.IsNullOrWhiteSpace(savedNote) ? "(Add a New Note)" : savedNote;
+
+        // Fetch and display Google Calendar events for the selected day
+        if (GoogleAuthenticator.IsAuthenticated)
+        {
+            var dayEvents = await GoogleCalendarManager.GetCalendarEventsAsync(clickedDate.Date, clickedDate.Date.AddDays(1).AddTicks(-1));
+
+            if (dayEvents.Count > 0)
+            {
+                string eventsInfo = "Today's Events:\n";
+                foreach (var calEvent in dayEvents)
+                {
+                    string time = calEvent.Start.DateTimeDateTimeOffset.HasValue ? calEvent.Start.DateTimeDateTimeOffset.Value.ToLocalTime().ToString("t") : "All Day";
+                    eventsInfo += $"- {calEvent.Summary} ({time})\n";
+                }
+                googleEventsText.text = eventsInfo;
+            }
+            else
+            {
+                googleEventsText.text = "No events scheduled in Google Calendar for this day.";
+            }
+        }
+        else
+        {
+            googleEventsText.text = "Sign in to Google to view events.";
+        }
+    }
+
+    // Create Google Calendar event from the note input
+    public async void SyncScheduleToGoogleCalendar()
+    {
+        if (!GoogleAuthenticator.IsAuthenticated)
+        {
+            Debug.LogWarning("Cannot sync schedule, user is not authenticated with Google.");
+            return;
+        }
+
+        int currentUserId = 1;
+        var scheduleLocalStorage = FindObjectOfType<ScheduleLocalStorage>();
+        List<ScheduledSession> sessionsToSync = scheduleLocalStorage.GetScheduleForUser(currentUserId);
+
+        Debug.Log($"Found {sessionsToSync.Count} sessions to sync with Google Calendar.");
+
+        foreach (var session in sessionsToSync)
+        {
+            var task = DatabaseManager.db.Find<Task>(session.task_id);
+
+            if (task != null)
+            {
+                // Use the properties from the fetched task object
+                string summary = $"Study: {task.title}";
+                string description = $"A {task.duration_minutes} minute study session for '{task.title}'.\n\nDetails: {task.description}";
+
+                await GoogleCalendarManager.CreateCalendarEventAsync(summary, description, session.start_time, session.end_time);
+            }
+            else
+            {
+                Debug.LogWarning($"Could not find task with ID {session.task_id} for scheduled session. Skipping sync for session ID {session.id}.");
+            }
+        }
+
+        // Refresh the calendar to show the newly created events
+        GenerateCalendar(currentDate.Year, currentDate.Month);
     }
 
     void SaveNote()

@@ -93,7 +93,7 @@ public class GoogleAuthenticator : MonoBehaviour
             calendarService = new CalendarService(baseClientInitializer);
             Debug.Log("Google Calendar service initialized successfully.");
 
-            // Initialize our static manager with the new service instance.
+            // Initialize the static manager with the new service instance.
             GoogleCalendarManager.Initialize(calendarService);
         }
         else

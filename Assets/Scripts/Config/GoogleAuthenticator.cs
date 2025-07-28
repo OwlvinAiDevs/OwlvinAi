@@ -3,73 +3,102 @@ using Google.Apis.Auth.OAuth2;
 using Google.Apis.Util.Store;
 using System.IO;
 using System.Threading;
+using Google.Apis.Services;
+using Google.Apis.Drive.v3;
+using Google.Apis.Calendar.v3;
 
 
 public class GoogleAuthenticator : MonoBehaviour
 {
     public TextAsset clientSecretJson;
 
+    // Scopes define the permissions the app is requesting from the user.
     private string[] Scopes = new string[]
     {
-        Google.Apis.Drive.v3.DriveService.Scope.DriveAppdata, // For access to UserSchedule.db on user's Google Drive
-        Google.Apis.Calendar.v3.CalendarService.Scope.CalendarEvents // For access to user's calendar events
+        // For access to UserSchedule.db on user's Google Drive
+        DriveService.Scope.DriveAppdata,
+        // For read/write access to the user's calendar events
+        CalendarService.Scope.CalendarEvents
     };
 
     private UserCredential credential;
 
-    // Start the authentication process
+    public static CalendarService calendarService { get; private set; }
+    public static DriveService driveService { get; private set; }
+    public static bool IsAuthenticated { get; private set; } = false;
+
+    /// <summary>
+    /// Starts the Google authentication process. This can be called from a UI button.
+    /// </summary>
     public async void AuthenticateGoogle()
     {
         if (clientSecretJson == null)
         {
-            Debug.LogError("Client secret JSON file is not set.");
+            Debug.LogError("Client secret JSON file is not assigned in the Inspector.");
             return;
         }
 
+        // The FileDataStore caches the user's access and refresh tokens to avoid
+        // asking for permission every time the app launches.
         IDataStore dataStore = new FileDataStore(Path.Combine(Application.persistentDataPath, "GoogleAuthToken"));
 
         try
         {
-            // Open a browser window for user authentication
+            // Load client secrets from the provided JSON asset.
             GoogleClientSecrets clientSecrets = GoogleClientSecrets.FromStream(new MemoryStream(clientSecretJson.bytes));
+
             Debug.Log("Starting Google authentication...");
+            // Trigger the OAuth 2.0 authorization flow.
+            // This will open a browser for the user to sign in and grant permissions.
             credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
                 clientSecrets.Secrets,
                 Scopes,
-                "user", // User identifier, can be any string
+                "user", // A unique identifier for the user.
                 CancellationToken.None,
                 dataStore
             );
 
             Debug.Log("Google authentication successful. User ID: " + credential.UserId);
 
-            // Initialize Google services with the authenticated credential
+            // Once authenticated, initialize the Google services.
             InitializeGoogleServices();
+            IsAuthenticated = true;
         }
         catch (System.Exception ex)
         {
-            Debug.LogError("Google authentication failed: " + ex.Message);
+            IsAuthenticated = false;
+            Debug.LogError($"Google authentication failed: {ex.Message}");
         }
     }
 
+    /// <summary>
+    /// Initializes the Google services (Drive, Calendar) using the user's credentials.
+    /// </summary>
     private void InitializeGoogleServices()
     {
         if (credential != null)
         {
-            // Initialize Google services with the authenticated credential
-            var driveService = new Google.Apis.Drive.v3.DriveService(new Google.Apis.Services.BaseClientService.Initializer()
+            // Create a base client service initializer.
+            var baseClientInitializer = new BaseClientService.Initializer()
             {
                 HttpClientInitializer = credential,
-                ApplicationName = "OwlvinAi"
-            });
-            Debug.Log("Google Drive service initialized.");
+                ApplicationName = "OwlvinAi",
+            };
 
-            var calendarService = new Google.Apis.Calendar.v3.CalendarService(new Google.Apis.Services.BaseClientService.Initializer()
-            {
-                HttpClientInitializer = credential,
-                ApplicationName = "OwlvinAi"
-            });
-            Debug.Log("Google Calendar service initialized.");
+            // Initialize the Drive service.
+            driveService = new DriveService(baseClientInitializer);
+            Debug.Log("Google Drive service initialized successfully.");
+
+            // Initialize the Calendar service.
+            calendarService = new CalendarService(baseClientInitializer);
+            Debug.Log("Google Calendar service initialized successfully.");
+
+            // Initialize our static manager with the new service instance.
+            GoogleCalendarManager.Initialize(calendarService);
+        }
+        else
+        {
+            Debug.LogError("Cannot initialize Google services without valid credentials.");
         }
     }
 }

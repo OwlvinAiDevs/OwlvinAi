@@ -991,7 +991,7 @@ MonoBehaviour:
   m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 1
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 1000, y: 3000}
+  m_ReferenceResolution: {x: 1421, y: 3000}
   m_ScreenMatchMode: 1
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
@@ -1053,6 +1053,7 @@ GameObject:
   - component: {fileID: 1030122636}
   - component: {fileID: 1030122635}
   - component: {fileID: 1030122634}
+  - component: {fileID: 1030122637}
   m_Layer: 0
   m_Name: EventSystem
   m_TagString: Untagged
@@ -1409,6 +1410,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4400fa2a41743e14cac332d5598722cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  outputText: {fileID: 0}
   outputText: {fileID: 0}
 --- !u!4 &1937370752
 Transform:

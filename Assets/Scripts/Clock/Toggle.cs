@@ -8,9 +8,11 @@ public class ToggleButton : MonoBehaviour
     public GameObject objectToToggle1;
     public GameObject objectToToggle2;
 
+    private bool toggleState = false;
+
     public void FlipX()
     {
-        
+        // Flip scale X on target and text
         if (targetObject != null)
         {
             Vector3 scale = targetObject.localScale;
@@ -25,15 +27,24 @@ public class ToggleButton : MonoBehaviour
             textObject.localScale = scale;
         }
 
-        
-        if (objectToToggle1 != null)
+        toggleState = !toggleState;
+
+        SetCanvasGroupState(objectToToggle1, toggleState);
+        SetCanvasGroupState(objectToToggle2, !toggleState);
+    }
+
+    private void SetCanvasGroupState(GameObject obj, bool visible)
+    {
+        if (obj == null) return;
+
+        CanvasGroup cg = obj.GetComponent<CanvasGroup>();
+        if (cg == null)
         {
-            objectToToggle1.SetActive(!objectToToggle1.activeSelf);
+            cg = obj.AddComponent<CanvasGroup>();
         }
 
-        if (objectToToggle2 != null)
-        {
-            objectToToggle2.SetActive(!objectToToggle2.activeSelf);
-        }
+        cg.alpha = visible ? 1f : 0f;
+        cg.interactable = visible;
+        cg.blocksRaycasts = visible;
     }
 }

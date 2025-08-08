@@ -90,6 +90,9 @@ PythonAI/.reload
 # SQLite database
 *.db
 
+# Google Client Secrets
+Assets/Resources/client_secret.json
+
 # Editor-specific settings (optional but useful if you're using these tools)
 .vscode/
 .idea/

@@ -119,9 +119,13 @@ public class CalendarManager : MonoBehaviour
         if (UIPanel2 != null)
             UIPanel2.SetActive(!UIPanel2.activeSelf);
 
-        string savedNote = PlayerPrefs.GetString(currentDateKey, "");
-        noteInputField.text = savedNote;
-        noteDisplayText.text = string.IsNullOrWhiteSpace(savedNote) ? "(Add a New Note)" : savedNote;
+        var savedNote = DatabaseManager.db.Table<UserNote>()
+            .Where(n => n.date_key == currentDateKey && n.user_id == this.userId)
+            .FirstOrDefault();
+
+        string noteText = savedNote?.note_text ?? "";
+        noteInputField.text = ""; // Clear input field
+        noteDisplayText.text = string.IsNullOrWhiteSpace(noteText) ? "(Add a New Note)" : noteText;
 
         // Fetch and display Google Calendar events for the selected day
         if (GoogleAuthenticator.IsAuthenticated)

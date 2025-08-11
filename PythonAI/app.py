@@ -1,12 +1,15 @@
 import logging
-from typing import Optional
-from fastapi import HTTPException
+from typing import List, Optional
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 from ai_model import generate_schedule, format_schedule_prompt, format_chat_prompt, call_openai_api
 from utils import parse_llm_response
-from pydantic import BaseModel
 from models import StudyRequest, ScheduleResponse
 
 logging.basicConfig(level=logging.DEBUG)
+
+# Initialize the FastAPI app
+app = FastAPI()
 
 @app.get("/ping")
 def ping():

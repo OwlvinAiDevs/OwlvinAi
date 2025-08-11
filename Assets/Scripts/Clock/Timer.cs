@@ -1,8 +1,11 @@
 using UnityEngine;
 using TMPro;
+using System;
 
 public class TimerController : MonoBehaviour
 {
+    public int currentTaskId = 0;
+    public int currentUserId = 1;
     public TextMeshProUGUI timerDisplay;
     private int totalSeconds = 0;
     private float countdown = 0f;
@@ -59,6 +62,36 @@ public class TimerController : MonoBehaviour
                 }
 
                 UpdateDisplay();
+            }
+        }
+
+        if (totalSeconds <= 0)
+        {
+            totalSeconds = 0;
+            isRunning = false;
+
+            if (!hasPlayedSound)
+            {
+                PlayTimerEndSound();
+                hasPlayedSound = true;
+
+                if (currentTaskId > 0)
+                {
+                    var sessionLog = new SessionLog
+                    {
+                        user_id = currentUserId,
+                        task_id = currentTaskId,
+                        end_time = DateTime.UtcNow,
+                        was_productive = true // Default to true or ask user
+                    };
+                    DatabaseManager.db.Insert(sessionLog);
+                    Debug.Log($"[Timer] Session logged: {JsonUtility.ToJson(sessionLog)}\nFor Task ID: {currentTaskId}");
+                }
+            }
+
+            if (pomodoroActive)
+            {
+                AdvancePomodoro();
             }
         }
     }

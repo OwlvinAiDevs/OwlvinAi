@@ -1,15 +1,10 @@
 import logging
-import json
-from datetime import datetime, timedelta
-from typing import List, Optional
-from fastapi import FastAPI, HTTPException, Depends
-from contextlib import asynccontextmanager
+from typing import Optional
+from fastapi import HTTPException
 from ai_model import generate_schedule, format_schedule_prompt, format_chat_prompt, call_openai_api
-from utils import parse_llm_response, get_user_state, recalculate_cached_availability
-from database import init_db, SessionLocal
+from utils import parse_llm_response
 from pydantic import BaseModel
-from models import StudyRequest, ScheduleResponse, User, BlockedTime, EnergyLevel
-from models import Task as DBTask, AIResponse as DBAIResponse
+from models import StudyRequest, ScheduleResponse
 
 logging.basicConfig(level=logging.DEBUG)
 

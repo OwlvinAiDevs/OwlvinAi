@@ -198,54 +198,25 @@ public class CalendarManager : MonoBehaviour
         string newNoteText = noteInputField.text.Trim();
         if (string.IsNullOrEmpty(newNoteText)) return;
 
-        var existingNote = DatabaseManager.db.Table<UserNote>()
-            .Where(n => n.date_key == currentDateKey && n.user_id == this.userId)
-            .FirstOrDefault();
+        // Create a new note and insert into the database
+        var newNote = new UserNote
+        {
+            user_id = this.userId,
+            date_key = currentDateKey,
+            note_text = newNoteText,
+            last_modified = DateTime.UtcNow
+        };
+        DatabaseManager.db.Insert(newNote);
 
-        if (existingNote != null)
-        {
-            // Update existing note
-            existingNote.note_text += "\n" + newNoteText;
-            existingNote.last_modified = DateTime.UtcNow;
-            DatabaseManager.db.Update(existingNote);
-            noteDisplayText.text = existingNote.note_text;
-        }
-        else
-        {
-            // Insert new note
-            var note = new UserNote
-            {
-                user_id = this.userId,
-                date_key = currentDateKey,
-                note_text = newNoteText,
-                last_modified = DateTime.UtcNow
-            };
-            DatabaseManager.db.Insert(note);
-            noteDisplayText.text = note.note_text;
-        }
+        DisplayNotesForDay(currentDateKey);
+        noteInputField.text = ""; // Clear input field after saving
     }
 
 
-    void ClearNote()
+    public void ClearNote(int noteId)
     {
-        // Check if a date as been selected
-        if (string.IsNullOrEmpty(currentDateKey)) return;
-
-        // Find the note for the current user and selected date in the database
-        var noteToDelete = DatabaseManager.db.Table<UserNote>()
-            .Where(n => n.date_key == currentDateKey && n.user_id == this.userId)
-            .FirstOrDefault();
-
-        // If a note exists, delete it from the database
-        if (noteToDelete != null)
-        {
-            DatabaseManager.db.Delete(noteToDelete);
-            Debug.Log($"[CalendarManager] Note for {currentDateKey} deleted from database.");
-        }
-
-        // Clear the UI text elements to give the user immediate feedback
-        noteDisplayText.text = "(Add a New Note)";
-        noteInputField.text = "";
+        DatabaseManager.db.Delete<UserNote>(noteId);
+        DisplayNotesForDay(currentDateKey);
     }
 
     public void ToggleUIPanels()

@@ -1,4 +1,5 @@
 import logging
+import json
 from datetime import datetime, timedelta
 from typing import List, Optional
 from fastapi import FastAPI, HTTPException, Depends
@@ -9,9 +10,7 @@ from database import init_db, SessionLocal
 from pydantic import BaseModel
 from sqlalchemy.orm import Session as DBSession
 from models import StudyRequest, ScheduleResponse, User, BlockedTime, EnergyLevel, CreateScheduledSession, ScheduledSessionOut
-from models import Task as DBTask, SessionLog as DBSessionLog, ScheduledSession as DBScheduledSession
-from models import StudyRequest, ScheduleResponse, User, BlockedTime, EnergyLevel, CreateScheduledSession, ScheduledSessionOut
-from models import Task as DBTask, SessionLog as DBSessionLog, ScheduledSession as DBScheduledSession
+from models import Task as DBTask, SessionLog as DBSessionLog, ScheduledSession as DBScheduledSession, AIResponse as DBAIResponse
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -124,6 +123,12 @@ async def generate_ai_schedule(request: StudyRequest, db: DBSession = Depends(ge
         gpt_response = await call_openai_api(prompt)
         logging.info("[SUCCESS] OpenAI API responded")
         logging.debug(f"Raw GPT response: {gpt_response}")
+
+        db_ai_response = DBAIResponse(
+            user_id=int(request.user_id),
+            response_json=json.dumps(gpt_response)
+        )
+        db.add(db_ai_response)
 
         if not isinstance(gpt_response, list) or not all(isinstance(item, dict) for item in gpt_response):
             raise ValueError("Invalid response format from OpenAI API. Expected a list of session dictionaries.")

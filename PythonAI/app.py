@@ -78,34 +78,13 @@ async def generate_ai_schedule(request: StudyRequest):
 class ChatPrompt(BaseModel):
     user_id: int
     message: str
-    include_context: bool = False # Toggle to include user context in the prompt
+    context: Optional[str] = ""
 
 @app.post("/chat")
-async def chat(prompt: ChatPrompt, db: DBSession = Depends(get_db)):
+async def chat(prompt: ChatPrompt):
     try:
-        # Pull context if requested
-        context = ""
-        if prompt.include_context:
-            user_state: StudyRequest = get_user_state(prompt.user_id, db)
-
-            context += "📅 User's current schedule:\n"
-            for i, s in enumerate(user_state.available_slots):
-                context += f"- Slot {i+1}: {s.start_time.strftime('%a %I:%M %p')} to {s.end_time.strftime('%I:%M %p')}\n"
-            
-            context += "\n📚 User's current tasks:\n"
-            for t in user_state.tasks:
-                context += f"- {t.title} ({t.duration_minutes} mins, due {t.due_date.strftime('%Y-%m-%d %H:%M')}, category: {t.category})\n"
-        
-        final_prompt = format_chat_prompt(prompt.message, context)
+        final_prompt = format_chat_prompt(prompt.message, prompt.context)
         gpt_response = await call_openai_api(final_prompt)
-
-        db_ai_response = DBAIResponse(
-            user_id=int(prompt.user_id),
-            response_json=json.dumps(gpt_response)
-        )
-        db.add(db_ai_response)
-        db.commit()
-
         return {"response": gpt_response}
     
     except Exception as e:

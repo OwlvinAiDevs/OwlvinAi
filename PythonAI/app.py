@@ -58,22 +58,6 @@ def seed_test_user_data(db: DBSession, user_id: int = 1):
     db.commit()
     recalculate_cached_availability(user_id, db)
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    logging.info("Starting up and initializing the database...")
-    init_db()
-    db = SessionLocal()
-    try:
-        seed_test_user_data(db, user_id=1)
-    except Exception as e:
-        logging.error(f"Error seeding test user: {e}")
-    finally:
-        db.close()
-    yield
-    logging.info("Shutting down...")
-
-app = FastAPI(lifespan=lifespan)
-
 def get_db():
     db = SessionLocal()
     try:

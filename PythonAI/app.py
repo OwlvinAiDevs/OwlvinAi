@@ -255,35 +255,3 @@ async def chat(prompt: ChatPrompt, db: DBSession = Depends(get_db)):
     except Exception as e:
         logging.error(f"[CHAT ERROR] {e}")
         raise HTTPException(status_code=500, detail="Error processing chat request")
-
-# --- Task Management Endpoints ---
-
-class CreateTask(BaseModel):
-    user_id: int
-    title: str
-    description: str = ""
-    due_date: datetime
-    duration_minutes: int
-    category: str = ""
-    completed: bool = False
-
-class TaskOut(BaseModel):
-    id: int
-    user_id: int
-    title: str
-    description: str
-    due_date: datetime
-    duration_minutes: int
-    category: str
-    completed: bool
-    class Config:
-        orm_mode = True
-
-# --- Session Logging Endpoints ---
-
-class LogSession(BaseModel):
-    user_id: int
-    task_id: Optional[int] = None
-    start_time: datetime
-    end_time: datetime
-    was_productive: bool = True

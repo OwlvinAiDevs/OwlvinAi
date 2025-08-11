@@ -279,19 +279,6 @@ class TaskOut(BaseModel):
     class Config:
         orm_mode = True
 
-@app.post("/tasks", response_model=TaskOut)
-def create_task(task: CreateTask, db: DBSession = Depends(get_db)):
-    db_task = DBTask(**task.model_dump())
-    db.add(db_task)
-    db.commit()
-    db.refresh(db_task)
-    logging.info(f"Task created: {db_task.title} for user {task.user_id}")
-    return db_task
-
-@app.get("/tasks", response_model=List[TaskOut])
-def get_tasks(user_id: int, db: DBSession = Depends(get_db)):
-    return db.query(DBTask).filter(DBTask.user_id == user_id).all()
-
 # --- Session Logging Endpoints ---
 
 class LogSession(BaseModel):

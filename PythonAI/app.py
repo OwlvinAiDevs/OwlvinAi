@@ -85,17 +85,6 @@ def get_db():
 def ping():
     return {"message": "pong"}
 
-@app.get("/user_state", response_model=StudyRequest)
-def fetch_user_state(user_id: int, db: DBSession = Depends(get_db)):
-    try:
-        user_state = get_user_state(user_id, db)
-        if not user_state:
-            raise HTTPException(status_code=404, detail="User state not found.")
-        return user_state
-    except Exception as e:
-        logging.error(f"Error fetching user state: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
-
 @app.post("/seed_test_user")
 def seed_test_user(db: DBSession = Depends(get_db)):
     seed_test_user_data(db, user_id=1)

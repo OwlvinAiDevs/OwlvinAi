@@ -7,6 +7,7 @@ public class TimerController : MonoBehaviour
     public int currentTaskId = 0;
     public int currentUserId = 1;
     public TextMeshProUGUI timerDisplay;
+    private DateTime sessionStartTime;
     private int totalSeconds = 0;
     private float countdown = 0f;
     private bool isRunning = false;
@@ -43,29 +44,11 @@ public class TimerController : MonoBehaviour
                 int secondsToSubtract = Mathf.FloorToInt(countdown);
                 totalSeconds -= secondsToSubtract;
                 countdown -= secondsToSubtract;
-
-                if (totalSeconds <= 0)
-                {
-                    totalSeconds = 0;
-                    isRunning = false;
-
-                    if (!hasPlayedSound)
-                    {
-                        PlayTimerEndSound();
-                        hasPlayedSound = true;
-                    }
-
-                    if (pomodoroActive)
-                    {
-                        AdvancePomodoro();
-                    }
-                }
-
                 UpdateDisplay();
             }
         }
 
-        if (totalSeconds <= 0)
+        if (isRunning && totalSeconds <= 0)
         {
             totalSeconds = 0;
             isRunning = false;
@@ -81,6 +64,7 @@ public class TimerController : MonoBehaviour
                     {
                         user_id = currentUserId,
                         task_id = currentTaskId,
+                        start_time = sessionStartTime,
                         end_time = DateTime.UtcNow,
                         was_productive = true // Default to true or ask user
                     };
@@ -93,6 +77,8 @@ public class TimerController : MonoBehaviour
             {
                 AdvancePomodoro();
             }
+            
+            UpdateDisplay();
         }
     }
 
@@ -108,6 +94,7 @@ public class TimerController : MonoBehaviour
         if (!isRunning && totalSeconds > 0)
         {
             isRunning = true;
+            sessionStartTime = DateTime.UtcNow;
         }
     }
 
@@ -162,18 +149,20 @@ public class TimerController : MonoBehaviour
 
     private void StartPomodoroPhase()
     {
+        sessionStartTime = DateTime.UtcNow;
+
         switch (pomodoroStep)
         {
-            case 0: 
+            case 0:
                 totalSeconds = 25 * 60;
                 break;
             case 1:
             case 2:
             case 3:
-            case 4: 
+            case 4:
                 totalSeconds = 5 * 60;
                 break;
-            case 5: 
+            case 5:
                 totalSeconds = 60 * 60;
                 break;
             default:

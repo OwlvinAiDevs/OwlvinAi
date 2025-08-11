@@ -22,6 +22,7 @@ public class CalendarManager : MonoBehaviour
     public Button clearNoteButton;
 
     public TextMeshProUGUI googleEventsText;
+    public int userId = 1; // Default user ID, can be set dynamically
 
     private DateTime currentDate;
     private int todayDay;

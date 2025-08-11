@@ -253,6 +253,14 @@ async def chat(prompt: ChatPrompt, db: DBSession = Depends(get_db)):
         
         final_prompt = format_chat_prompt(prompt.message, context)
         gpt_response = await call_openai_api(final_prompt)
+
+        db_ai_response = DBAIResponse(
+            user_id=int(prompt.user_id),
+            response_json=json.dumps(gpt_response)
+        )
+        db.add(db_ai_response)
+        db.commit()
+
         return {"response": gpt_response}
     
     except Exception as e:

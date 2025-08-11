@@ -8,55 +8,10 @@ from ai_model import generate_schedule, format_schedule_prompt, format_chat_prom
 from utils import parse_llm_response, get_user_state, recalculate_cached_availability
 from database import init_db, SessionLocal
 from pydantic import BaseModel
-from sqlalchemy.orm import Session as DBSession
-from models import StudyRequest, ScheduleResponse, User, BlockedTime, EnergyLevel, CreateScheduledSession, ScheduledSessionOut
-from models import Task as DBTask, SessionLog as DBSessionLog, ScheduledSession as DBScheduledSession, AIResponse as DBAIResponse
+from models import StudyRequest, ScheduleResponse, User, BlockedTime, EnergyLevel
+from models import Task as DBTask, AIResponse as DBAIResponse
 
 logging.basicConfig(level=logging.DEBUG)
-
-def seed_test_user_data(db: DBSession, user_id: int = 1):
-    now = datetime.utcnow()
-
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        user = User(id=user_id, username="test_user", email="test_user@example.com", auth_provider="local")
-        db.add(user)
-        db.commit()
-
-    if not db.query(DBTask).filter(DBTask.user_id == user_id).first():
-        db.add_all([
-            DBTask(
-                user_id=user_id,
-                title="Complete Python project",
-                description="Finish the AI scheduling project for Owlvin.",
-                due_date=now + timedelta(days=1),
-                duration_minutes=60,
-                category="AI"
-            ),
-            DBTask(
-                user_id=user_id,
-                title="Read AI research paper",
-                description="Study the latest advancements in AI scheduling.",
-                due_date=now + timedelta(days=2),
-                duration_minutes=45,
-                category="Research"
-            )
-        ])
-
-    if not db.query(EnergyLevel).filter(EnergyLevel.user_id == user_id).first():
-        db.add_all([
-            EnergyLevel(user_id=user_id, timestamp=now, level="high"),
-            EnergyLevel(user_id=user_id, timestamp=now + timedelta(hours=4), level="medium")
-        ])
-
-    if not db.query(BlockedTime).filter(BlockedTime.user_id == user_id).first():
-        db.add_all([
-            BlockedTime(user_id=user_id, start_time=now + timedelta(hours=1), end_time=now + timedelta(hours=2), reason="class"),
-            BlockedTime(user_id=user_id, start_time=now + timedelta(hours=3), end_time=now + timedelta(hours=4), reason="gym"),
-        ])
-
-    db.commit()
-    recalculate_cached_availability(user_id, db)
 
 def get_db():
     db = SessionLocal()
@@ -81,7 +36,7 @@ def schedule(request: StudyRequest):
     return generate_schedule(request)
 
 @app.post("/generate_ai_schedule", response_model=ScheduleResponse)
-async def generate_ai_schedule(request: StudyRequest, db: DBSession = Depends(get_db)):
+async def generate_ai_schedule(request: StudyRequest):
     try:
         logging.info(f"[START] /generate_ai_schedule for user_id={request.user_id}")
         logging.debug(f"Request JSON: {request.model_dump_json()}")
@@ -91,69 +46,11 @@ async def generate_ai_schedule(request: StudyRequest, db: DBSession = Depends(ge
         gpt_response = await call_openai_api(prompt)
         logging.info("[SUCCESS] OpenAI API responded")
         logging.debug(f"Raw GPT response: {gpt_response}")
-
-        db_ai_response = DBAIResponse(
-            user_id=int(request.user_id),
-            response_json=json.dumps(gpt_response)
-        )
-        db.add(db_ai_response)
-
-        if not isinstance(gpt_response, list) or not all(isinstance(item, dict) for item in gpt_response):
-            raise ValueError("Invalid response format from OpenAI API. Expected a list of session dictionaries.")
-
         sessions = parse_llm_response(gpt_response)
         logging.info(f"Parsed {len(sessions)} sessions from GPT response")
 
-        # Clear old scheduled sessions for this user
-        deleted = db.query(DBScheduledSession).filter(DBScheduledSession.user_id == int(request.user_id)).delete()
-        logging.info(f"[CLEANUP] Deleted {deleted} previous scheduled sessions for user {request.user_id}")
-
-        # Persist AI-generated sessions into scheduled_sessions table
-        for s in sessions:
-            matched_task = db.query(DBTask).filter(
-                DBTask.title == s.task.title,
-                DBTask.user_id == int(request.user_id)
-            ).first()
-            if matched_task:
-                s.task_id = matched_task.id
-                logging.debug(f"[MATCH] Found task '{matched_task.title}' with ID {matched_task.id} for user {request.user_id}")
-                db.add(DBScheduledSession(
-                    user_id=int(request.user_id),
-                    task_id=matched_task.id,
-                    start_time=s.start_time,
-                    end_time=s.end_time,
-                    break_after=s.break_after or 5
-                ))
-            else:
-                logging.warning(f"[MISS] Task '{s.task.title}' not found in DB for user {request.user_id}")
-        db.commit()
-        logging.info("[COMMIT] Scheduled sessions saved to database")
-
-        # Metrics and response formatting
-        # Clear old scheduled sessions for this user
-        deleted = db.query(DBScheduledSession).filter(DBScheduledSession.user_id == int(request.user_id)).delete()
-        logging.info(f"[CLEANUP] Deleted {deleted} previous scheduled sessions for user {request.user_id}")
-
-        # Persist AI-generated sessions into scheduled_sessions table
-        for s in sessions:
-            matched_task = db.query(DBTask).filter(
-                DBTask.title == s.task.title,
-                DBTask.user_id == int(request.user_id)
-            ).first()
-            if matched_task:
-                s.task_id = matched_task.id
-                logging.debug(f"[MATCH] Found task '{matched_task.title}' with ID {matched_task.id} for user {request.user_id}")
-                db.add(DBScheduledSession(
-                    user_id=int(request.user_id),
-                    task_id=matched_task.id,
-                    start_time=s.start_time,
-                    end_time=s.end_time,
-                    break_after=s.break_after or 5
-                ))
-            else:
-                logging.warning(f"[MISS] Task '{s.task.title}' not found in DB for user {request.user_id}")
-        db.commit()
-        logging.info("[COMMIT] Scheduled sessions saved to database")
+        if not isinstance(gpt_response, list) or not all(isinstance(item, dict) for item in gpt_response):
+            raise ValueError("Invalid response format from OpenAI API. Expected a list of session dictionaries.")
 
         # Metrics and response formatting
         total_study_time = sum([s.task.duration_minutes for s in sessions])

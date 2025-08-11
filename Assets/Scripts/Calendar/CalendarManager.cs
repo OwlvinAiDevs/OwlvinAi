@@ -192,22 +192,35 @@ public class CalendarManager : MonoBehaviour
 
     void SaveNote()
     {
-        if (!string.IsNullOrEmpty(currentDateKey))
+        if (string.IsNullOrEmpty(noteInputField.text)) return;
+
+        string newNoteText = noteInputField.text.Trim();
+        if (string.IsNullOrEmpty(newNoteText)) return;
+
+        var existingNote = DatabaseManager.db.Table<UserNote>()
+            .Where(n => n.date_key == currentDateKey && n.user_id == this.userId)
+            .FirstOrDefault();
+
+        if (existingNote != null)
         {
-            string existingNotes = PlayerPrefs.GetString(currentDateKey, "");
-            string newNote = noteInputField.text.Trim();
-            if (string.IsNullOrEmpty(newNote)) return;
-
-            string updatedNotes;
-            if (string.IsNullOrEmpty(existingNotes))
-                updatedNotes = newNote;
-            else
-                updatedNotes = existingNotes + "\n" + newNote;
-
-            PlayerPrefs.SetString(currentDateKey, updatedNotes);
-
-            noteDisplayText.text = updatedNotes;
-            noteInputField.text = "";
+            // Update existing note
+            existingNote.note_text += "\n" + newNoteText;
+            existingNote.last_modified = DateTime.UtcNow;
+            DatabaseManager.db.Update(existingNote);
+            noteDisplayText.text = existingNote.note_text;
+        }
+        else
+        {
+            // Insert new note
+            var note = new UserNote
+            {
+                user_id = this.userId,
+                date_key = currentDateKey,
+                note_text = newNoteText,
+                last_modified = DateTime.UtcNow
+            };
+            DatabaseManager.db.Insert(note);
+            noteDisplayText.text = note.note_text;
         }
     }
 

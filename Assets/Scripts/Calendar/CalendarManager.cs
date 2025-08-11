@@ -228,26 +228,24 @@ public class CalendarManager : MonoBehaviour
 
     void ClearNote()
     {
+        // Check if a date as been selected
         if (string.IsNullOrEmpty(currentDateKey)) return;
 
-        string savedNotes = PlayerPrefs.GetString(currentDateKey, "");
-        if (string.IsNullOrEmpty(savedNotes)) return;
+        // Find the note for the current user and selected date in the database
+        var noteToDelete = DatabaseManager.db.Table<UserNote>()
+            .Where(n => n.date_key == currentDateKey && n.user_id == this.userId)
+            .FirstOrDefault();
 
-        string[] lines = savedNotes.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        // If a note exists, delete it from the database
+        if (noteToDelete != null)
+        {
+            DatabaseManager.db.Delete(noteToDelete);
+            Debug.Log($"[CalendarManager] Note for {currentDateKey} deleted from database.");
+        }
 
-        if (lines.Length == 0) return;
-
-        string[] updatedLines = new string[lines.Length - 1];
-        Array.Copy(lines, updatedLines, lines.Length - 1);
-
-        string updatedNotes = string.Join("\n", updatedLines);
-
-        if (string.IsNullOrEmpty(updatedNotes))
-            PlayerPrefs.DeleteKey(currentDateKey);
-        else
-            PlayerPrefs.SetString(currentDateKey, updatedNotes);
-
-        noteDisplayText.text = string.IsNullOrEmpty(updatedNotes) ? "(Add a New Note)" : updatedNotes;
+        // Clear the UI text elements to give the user immediate feedback
+        noteDisplayText.text = "(Add a New Note)";
+        noteInputField.text = "";
     }
 
     public void ToggleUIPanels()

@@ -1,7 +1,7 @@
 using SQLite;
 
 [Table("alarms")]
-public class AlarmModel
+public class Alarms
 {
     [PrimaryKey, AutoIncrement]
     public int id { get; set; }

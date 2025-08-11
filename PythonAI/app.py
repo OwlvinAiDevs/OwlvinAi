@@ -206,19 +206,6 @@ async def generate_ai_schedule(request: StudyRequest, db: DBSession = Depends(ge
         fallback.success = False
         return fallback
 
-@app.post("/schedule_session", response_model=ScheduledSessionOut)
-def create_scheduled_session(session: CreateScheduledSession, db: DBSession = Depends(get_db)):
-    db_session = DBScheduledSession(**session.model_dump())
-    db.add(db_session)
-    db.commit()
-    db.refresh(db_session)
-    logging.info(f"Scheduled session created: {db_session.id} for user {session.user_id}")
-    return db_session
-
-@app.get("/scheduled_sessions", response_model=List[ScheduledSessionOut])
-def get_scheduled_sessions(user_id: int, db: DBSession = Depends(get_db)):
-    return db.query(DBScheduledSession).filter(DBScheduledSession.user_id == user_id).all()
-
 class ChatPrompt(BaseModel):
     user_id: int
     message: str

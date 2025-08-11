@@ -69,11 +69,6 @@ def get_db():
 def ping():
     return {"message": "pong"}
 
-@app.post("/seed_test_user")
-def seed_test_user(db: DBSession = Depends(get_db)):
-    seed_test_user_data(db, user_id=1)
-    return {"status": "Test user seeded successfully", "user_id": 1}
-
 @app.post("/generate_schedule", response_model=ScheduleResponse)
 def schedule(request: StudyRequest):
     logging.info(f"Received StudyRequest: user_id={request.user_id}, tasks={len(request.tasks)}, slots={len(request.available_slots)}")

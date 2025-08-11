@@ -13,13 +13,6 @@ from models import Task as DBTask, AIResponse as DBAIResponse
 
 logging.basicConfig(level=logging.DEBUG)
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
 @app.get("/ping")
 def ping():
     return {"message": "pong"}

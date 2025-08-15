@@ -15,12 +15,11 @@ public class CalendarManager : MonoBehaviour
     public Transform dayGrid;
     public GameObject UIPanel1;
     public GameObject UIPanel2;
-
     public TMP_InputField noteInputField;
-    public TextMeshProUGUI noteDisplayText;
     public Button saveNoteButton;
     public Button clearNoteButton;
-
+    public GameObject noteItemPrefab;
+    public Transform notesContainer;
     public TextMeshProUGUI googleEventsText;
     public int userId = 1; // Default user ID, can be set dynamically
 
@@ -112,6 +111,9 @@ public class CalendarManager : MonoBehaviour
         DateTime clickedDate = new DateTime(currentDate.Year, currentDate.Month, day);
         currentDateKey = clickedDate.ToString("yyyy-MM-dd");
 
+        // Display all notes for the selected day
+        DisplayNotesForDay(currentDateKey);
+
         string formattedDate = $"{clickedDate:dddd MMMM} {GetDayWithSuffix(day)} {clickedDate:yyyy}";
         selectedDateLabel.text = formattedDate;
         if (UIPanel1 != null)
@@ -126,7 +128,6 @@ public class CalendarManager : MonoBehaviour
 
         string noteText = savedNote?.note_text ?? "";
         noteInputField.text = ""; // Clear input field
-        noteDisplayText.text = string.IsNullOrWhiteSpace(noteText) ? "(Add a New Note)" : noteText;
 
         // Fetch and display Google Calendar events for the selected day
         if (GoogleAuthenticator.IsAuthenticated)
@@ -151,6 +152,27 @@ public class CalendarManager : MonoBehaviour
         else
         {
             googleEventsText.text = "Sign in to Google to view events.";
+        }
+    }
+
+    void DisplayNotesForDay(string dateKey)
+    {
+        // Clear any old note items from the list
+        foreach (Transform child in notesContainer)
+        {
+            Destroy(child.gameObject);
+        }
+
+        // Get all notes for this day from the database
+        var notesForDay = DatabaseManager.db.Table<UserNote>()
+            .Where(n => n.date_key == dateKey && n.user_id == this.userId)
+            .ToList();
+
+        // Create a new UI element for each note
+        foreach (var note in notesForDay)
+        {
+            GameObject noteObject = Instantiate(noteItemPrefab, notesContainer);
+            noteObject.GetComponent<NoteItemUI>().Setup(note, this);
         }
     }
 

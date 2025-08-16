@@ -1167,7 +1167,7 @@ GameObject:
   - component: {fileID: 795452302}
   - component: {fileID: 795452301}
   m_Layer: 0
-  m_Name: TextLabel
+  m_Name: SelectedDateLabel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2216,12 +2216,13 @@ MonoBehaviour:
   nextButton: {fileID: 1583899434}
   dayCellPrefab: {fileID: 3672045240580057585, guid: 0d163a1ee9ae4ba4abd15a1e3a13f3f2, type: 3}
   dayGrid: {fileID: 680446236}
-  UIPanel1: {fileID: 1458841874}
-  UIPanel2: {fileID: 1533154805}
+  CalendarUI: {fileID: 1458841874}
+  DayUI: {fileID: 1533154805}
   noteInputField: {fileID: 136774481}
-  noteDisplayText: {fileID: 1023782768}
   saveNoteButton: {fileID: 1665177333}
   clearNoteButton: {fileID: 2143200679}
+  noteItemPrefab: {fileID: 1243473967923208710, guid: f8f584f8ae5dd1322a66055f7bcad3e3, type: 3}
+  notesContainer: {fileID: 1023782766}
   googleEventsText: {fileID: 956973625}
   userId: 1
 --- !u!1 &1162593986
@@ -3102,7 +3103,7 @@ GameObject:
   - component: {fileID: 1665177334}
   - component: {fileID: 1665177333}
   m_Layer: 0
-  m_Name: Button (1)
+  m_Name: SaveNoteButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3654,7 +3655,7 @@ GameObject:
   - component: {fileID: 2143200680}
   - component: {fileID: 2143200679}
   m_Layer: 0
-  m_Name: Button
+  m_Name: ClearNoteButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

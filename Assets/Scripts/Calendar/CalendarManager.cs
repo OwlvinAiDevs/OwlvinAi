@@ -13,8 +13,8 @@ public class CalendarManager : MonoBehaviour
     public Button nextButton;
     public GameObject dayCellPrefab;
     public Transform dayGrid;
-    public GameObject UIPanel1;
-    public GameObject UIPanel2;
+    public GameObject CalendarUI;
+    public GameObject DayUI;
     public TMP_InputField noteInputField;
     public Button saveNoteButton;
     public Button clearNoteButton;
@@ -115,11 +115,11 @@ public class CalendarManager : MonoBehaviour
 
         string formattedDate = $"{clickedDate:dddd MMMM} {GetDayWithSuffix(day)} {clickedDate:yyyy}";
         selectedDateLabel.text = formattedDate;
-        if (UIPanel1 != null)
-            UIPanel1.SetActive(!UIPanel1.activeSelf);
+        if (CalendarUI != null)
+            CalendarUI.SetActive(!CalendarUI.activeSelf);
 
-        if (UIPanel2 != null)
-            UIPanel2.SetActive(!UIPanel2.activeSelf);
+        if (DayUI != null)
+            DayUI.SetActive(!DayUI.activeSelf);
 
         var savedNote = DatabaseManager.db.Table<UserNote>()
             .Where(n => n.date_key == currentDateKey && n.user_id == this.userId)
@@ -242,11 +242,11 @@ public class CalendarManager : MonoBehaviour
 
     public void ToggleUIPanels()
     {
-        if (UIPanel1 != null)
-            UIPanel1.SetActive(!UIPanel1.activeSelf);
+        if (CalendarUI != null)
+            CalendarUI.SetActive(!CalendarUI.activeSelf);
 
-        if (UIPanel2 != null)
-            UIPanel2.SetActive(!UIPanel2.activeSelf);
+        if (DayUI != null)
+            DayUI.SetActive(!DayUI.activeSelf);
     }
 
     string GetDayWithSuffix(int day)

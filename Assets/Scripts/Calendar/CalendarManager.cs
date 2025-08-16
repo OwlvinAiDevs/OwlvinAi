@@ -37,7 +37,6 @@ public class CalendarManager : MonoBehaviour
         prevButton.onClick.AddListener(() => ChangeMonth(-1));
         nextButton.onClick.AddListener(() => ChangeMonth(1));
         saveNoteButton.onClick.AddListener(SaveNote);
-        clearNoteButton?.onClick.AddListener(ClearNote);
     }
 
     void ChangeMonth(int offset)

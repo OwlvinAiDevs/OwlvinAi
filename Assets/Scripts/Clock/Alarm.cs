@@ -4,6 +4,7 @@ using TMPro;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 public class AlarmManager : MonoBehaviour
 {
@@ -16,7 +17,8 @@ public class AlarmManager : MonoBehaviour
     public AudioSource alarmSound;
 
     // List of alarms (hour, minute)
-    private List<(int hour, int minute)> alarms = new();
+    private List<Alarms> alarms = new();
+    public int userId = 1; // Default user ID, can be set dynamically
 
     private void Start()
     {
@@ -35,20 +37,15 @@ public class AlarmManager : MonoBehaviour
         addAlarmButton.onClick.AddListener(AddAlarm);
         removeAlarmButton.onClick.AddListener(RemoveLastAlarm);
 
+        LoadAlarms();
         UpdateAlarmsDisplay();
     }
 
-    private void Update()
+    void LoadAlarms()
     {
-        DateTime now = DateTime.Now;
-
-        foreach (var alarm in alarms)
-        {
-            if (now.Hour == alarm.hour && now.Minute == alarm.minute && now.Second == 0)
-            {
-                alarmSound?.Play();
-            }
-        }
+        alarms = DatabaseManager.db.Table<Alarms>()
+            .Where(a => a.user_id == userId)
+            .ToList();
     }
 
     private void AddAlarm()
@@ -56,16 +53,13 @@ public class AlarmManager : MonoBehaviour
         int h = hourDropdown.value;
         int m = minuteDropdown.value;
 
-        // Optional: prevent duplicate alarms
-        if (!alarms.Contains((h, m)))
+        if (!alarms.Any(a => a.hour == h && a.minute == m))
         {
-            alarms.Add((h, m));
-            UpdateAlarmsDisplay();
-            Debug.Log($"Added alarm {h:00}:{m:00}");
-        }
-        else
-        {
-            Debug.Log("Alarm already set for this time.");
+            // Save new alarm to database
+            var newAlarm = new Alarms { user_id = userId, hour = h, minute = m };
+            DatabaseManager.db.Insert(newAlarm);
+            alarms.Add(newAlarm);
+            Debug.Log($"[AlarmManager] Added alarm: {h:00}:{m:00}");
         }
     }
 
@@ -73,9 +67,13 @@ public class AlarmManager : MonoBehaviour
     {
         if (alarms.Count > 0)
         {
-            alarms.RemoveAt(alarms.Count - 1);
+            var lastAlarm = alarms.Last();
+
+            // Delete alarm from database
+            DatabaseManager.db.Delete(lastAlarm);
+            alarms.Remove(lastAlarm); // Removes alarm from local list
             UpdateAlarmsDisplay();
-            Debug.Log("Removed last alarm");
+            Debug.Log($"[AlarmManager] Removed alarm: {lastAlarm.hour:00}:{lastAlarm.minute:00} from database.");
         }
     }
 
@@ -87,11 +85,24 @@ public class AlarmManager : MonoBehaviour
         StringBuilder sb = new();
         sb.AppendLine("Alarms Set:");
 
-        foreach (var alarm in alarms)
+        foreach (var alarm in alarms) // Loops through Alarms objects
         {
             sb.AppendLine($"{alarm.hour:00}:{alarm.minute:00}");
         }
 
         alarmsListText.text = sb.ToString();
+    }
+
+    private void Update()
+    {
+        DateTime now = DateTime.Now;
+
+        foreach (var alarm in alarms) // Loops through alarms objects
+        {
+            if (now.Hour == alarm.hour && now.Minute == alarm.minute && now.Second == 0)
+            {
+                alarmSound?.Play();
+            }
+        }
     }
 }

@@ -13,15 +13,15 @@ public class CalendarManager : MonoBehaviour
     public Button nextButton;
     public GameObject dayCellPrefab;
     public Transform dayGrid;
-    public GameObject UIPanel1;
-    public GameObject UIPanel2;
-
+    public GameObject CalendarUI;
+    public GameObject DayUI;
     public TMP_InputField noteInputField;
-    public TextMeshProUGUI noteDisplayText;
     public Button saveNoteButton;
     public Button clearNoteButton;
-
+    public GameObject noteItemPrefab;
+    public Transform notesContainer;
     public TextMeshProUGUI googleEventsText;
+    public int userId = 1; // Default user ID, can be set dynamically
 
     private DateTime currentDate;
     private int todayDay;
@@ -37,7 +37,6 @@ public class CalendarManager : MonoBehaviour
         prevButton.onClick.AddListener(() => ChangeMonth(-1));
         nextButton.onClick.AddListener(() => ChangeMonth(1));
         saveNoteButton.onClick.AddListener(SaveNote);
-        clearNoteButton?.onClick.AddListener(ClearNote);
     }
 
     void ChangeMonth(int offset)
@@ -111,17 +110,23 @@ public class CalendarManager : MonoBehaviour
         DateTime clickedDate = new DateTime(currentDate.Year, currentDate.Month, day);
         currentDateKey = clickedDate.ToString("yyyy-MM-dd");
 
+        // Display all notes for the selected day
+        DisplayNotesForDay(currentDateKey);
+
         string formattedDate = $"{clickedDate:dddd MMMM} {GetDayWithSuffix(day)} {clickedDate:yyyy}";
         selectedDateLabel.text = formattedDate;
-        if (UIPanel1 != null)
-            UIPanel1.SetActive(!UIPanel1.activeSelf);
+        if (CalendarUI != null)
+            CalendarUI.SetActive(!CalendarUI.activeSelf);
 
-        if (UIPanel2 != null)
-            UIPanel2.SetActive(!UIPanel2.activeSelf);
+        if (DayUI != null)
+            DayUI.SetActive(!DayUI.activeSelf);
 
-        string savedNote = PlayerPrefs.GetString(currentDateKey, "");
-        noteInputField.text = savedNote;
-        noteDisplayText.text = string.IsNullOrWhiteSpace(savedNote) ? "(Add a New Note)" : savedNote;
+        var savedNote = DatabaseManager.db.Table<UserNote>()
+            .Where(n => n.date_key == currentDateKey && n.user_id == this.userId)
+            .FirstOrDefault();
+
+        string noteText = savedNote?.note_text ?? "";
+        noteInputField.text = ""; // Clear input field
 
         // Fetch and display Google Calendar events for the selected day
         if (GoogleAuthenticator.IsAuthenticated)
@@ -146,6 +151,27 @@ public class CalendarManager : MonoBehaviour
         else
         {
             googleEventsText.text = "Sign in to Google to view events.";
+        }
+    }
+
+    void DisplayNotesForDay(string dateKey)
+    {
+        // Clear any old note items from the list
+        foreach (Transform child in notesContainer)
+        {
+            Destroy(child.gameObject);
+        }
+
+        // Get all notes for this day from the database
+        var notesForDay = DatabaseManager.db.Table<UserNote>()
+            .Where(n => n.date_key == dateKey && n.user_id == this.userId)
+            .ToList();
+
+        // Create a new UI element for each note
+        foreach (var note in notesForDay)
+        {
+            GameObject noteObject = Instantiate(noteItemPrefab, notesContainer);
+            noteObject.GetComponent<NoteItemUI>().Setup(note, this);
         }
     }
 
@@ -188,57 +214,39 @@ public class CalendarManager : MonoBehaviour
 
     void SaveNote()
     {
-        if (!string.IsNullOrEmpty(currentDateKey))
+        if (string.IsNullOrEmpty(noteInputField.text)) return;
+
+        string newNoteText = noteInputField.text.Trim();
+        if (string.IsNullOrEmpty(newNoteText)) return;
+
+        // Create a new note and insert into the database
+        var newNote = new UserNote
         {
-            string existingNotes = PlayerPrefs.GetString(currentDateKey, "");
-            string newNote = noteInputField.text.Trim();
-            if (string.IsNullOrEmpty(newNote)) return;
+            user_id = this.userId,
+            date_key = currentDateKey,
+            note_text = newNoteText,
+            last_modified = DateTime.UtcNow
+        };
+        DatabaseManager.db.Insert(newNote);
 
-            string updatedNotes;
-            if (string.IsNullOrEmpty(existingNotes))
-                updatedNotes = newNote;
-            else
-                updatedNotes = existingNotes + "\n" + newNote;
-
-            PlayerPrefs.SetString(currentDateKey, updatedNotes);
-
-            noteDisplayText.text = updatedNotes;
-            noteInputField.text = "";
-        }
+        DisplayNotesForDay(currentDateKey);
+        noteInputField.text = ""; // Clear input field after saving
     }
 
 
-    void ClearNote()
+    public void ClearNote(int noteId)
     {
-        if (string.IsNullOrEmpty(currentDateKey)) return;
-
-        string savedNotes = PlayerPrefs.GetString(currentDateKey, "");
-        if (string.IsNullOrEmpty(savedNotes)) return;
-
-        string[] lines = savedNotes.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-
-        if (lines.Length == 0) return;
-
-        string[] updatedLines = new string[lines.Length - 1];
-        Array.Copy(lines, updatedLines, lines.Length - 1);
-
-        string updatedNotes = string.Join("\n", updatedLines);
-
-        if (string.IsNullOrEmpty(updatedNotes))
-            PlayerPrefs.DeleteKey(currentDateKey);
-        else
-            PlayerPrefs.SetString(currentDateKey, updatedNotes);
-
-        noteDisplayText.text = string.IsNullOrEmpty(updatedNotes) ? "(Add a New Note)" : updatedNotes;
+        DatabaseManager.db.Delete<UserNote>(noteId);
+        DisplayNotesForDay(currentDateKey);
     }
 
     public void ToggleUIPanels()
     {
-        if (UIPanel1 != null)
-            UIPanel1.SetActive(!UIPanel1.activeSelf);
+        if (CalendarUI != null)
+            CalendarUI.SetActive(!CalendarUI.activeSelf);
 
-        if (UIPanel2 != null)
-            UIPanel2.SetActive(!UIPanel2.activeSelf);
+        if (DayUI != null)
+            DayUI.SetActive(!DayUI.activeSelf);
     }
 
     string GetDayWithSuffix(int day)

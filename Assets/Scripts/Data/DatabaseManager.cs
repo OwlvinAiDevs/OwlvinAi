@@ -13,9 +13,11 @@ public static class DatabaseManager
 
         db.CreateTable<User>();
         db.CreateTable<Task>();
+        db.CreateTable<UserNote>();
         db.CreateTable<ScheduledSession>();
         db.CreateTable<SessionLog>();
         db.CreateTable<EnergyLevel>();
+        db.CreateTable<Alarms>();
         db.CreateTable<CachedAvailability>();
         db.CreateTable<BlockedTime>();
         db.CreateTable<AIResponse>();

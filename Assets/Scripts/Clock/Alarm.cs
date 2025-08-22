@@ -31,8 +31,11 @@ public class AlarmManager : MonoBehaviour
         for (int m = 0; m < 60; m++)
             minuteDropdown.options.Add(new TMP_Dropdown.OptionData(m.ToString("00")));
 
+        // Set defaults and refresh captions
         hourDropdown.value = 0;
         minuteDropdown.value = 0;
+        hourDropdown.RefreshShownValue();
+        minuteDropdown.RefreshShownValue();
 
         addAlarmButton.onClick.AddListener(AddAlarm);
         removeAlarmButton.onClick.AddListener(RemoveLastAlarm);
@@ -40,6 +43,7 @@ public class AlarmManager : MonoBehaviour
         LoadAlarms();
         UpdateAlarmsDisplay();
     }
+
 
     void LoadAlarms()
     {
@@ -59,9 +63,14 @@ public class AlarmManager : MonoBehaviour
             var newAlarm = new Alarms { user_id = userId, hour = h, minute = m };
             DatabaseManager.db.Insert(newAlarm);
             alarms.Add(newAlarm);
+
             Debug.Log($"[AlarmManager] Added alarm: {h:00}:{m:00}");
+
+            // Refresh the UI here
+            UpdateAlarmsDisplay();
         }
     }
+
 
     private void RemoveLastAlarm()
     {

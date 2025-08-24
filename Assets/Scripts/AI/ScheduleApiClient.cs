@@ -172,6 +172,46 @@ public class ScheduleApiClient : MonoBehaviour
         }
     }
 
+    private StudyRequest BuildStudyRequestFromLocalDB(int userId)
+    {
+        // Query UserSchedule.db for all non-completed tasks for the user
+        var userTasks = DatabaseManager.db.Table<Task>()
+            .Where(t => t.user_id == userId && !t.completed)
+            .ToList();
+
+        // Convert db task model to TaskData model required by the API
+        List<TaskData> taskDataList = new List<TaskData>();
+        foreach (var task in userTasks)
+        {
+            taskDataList.Add(new TaskData
+            {
+                title = task.title,
+                due_date = task.due_date.ToString("o"),
+                duration_minutes = task.duration_minutes,
+                category = task.category
+            });
+        }
+
+        // Query for availability, energy, etc., (using placeholder data for now)
+        // Replace this will real queries later
+        var availableSlots = new TimeSlotData[]
+        {
+            new TimeSlotData { start_time = DateTime.UtcNow.AddHours(1).ToString("o"),
+                end_time = DateTime.UtcNow.AddHours(3).ToString("o") },
+        };
+        var energyLevels = new int[] { 3 };
+
+        // Assemble and return the final request object
+        return new StudyRequest
+        {
+            user_id = userId.ToString(),
+            energy_level = energyLevels,
+            pomodoro_length = 25, // Default, or replace with user settings
+            available_slots = availableSlots,
+            tasks = taskDataList.ToArray()
+        };
+    }
+
     private IEnumerator RunScheduleRequest()
     {
         StudyRequest request = new StudyRequest

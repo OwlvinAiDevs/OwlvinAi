@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 using TMPro;
@@ -77,99 +78,9 @@ public class ScheduleApiClient : MonoBehaviour
     public TextMeshProUGUI outputText;
     private readonly string API_URL = ApiConfig.GetFullUrl(ApiConfig.Endpoints.GenerateSchedule);
 
-    public void SendMockScheduleRequest()
-    {
-        StartCoroutine(RunScheduleRequest());
-    }
-
     public void RequestScheduleFromBackend(int userId)
     {
-        StartCoroutine(GetAndForwardUserState(userId));
-    }
-
-    private IEnumerator GetAndForwardUserState(int userId)
-    {
-        string userStateUrl = ApiConfig.GetFullUrl(ApiConfig.Endpoints.GetUserState) + $"?user_id={userId}";
-        UnityWebRequest getRequest = UnityWebRequest.Get(userStateUrl);
-        getRequest.timeout = 45;
-        getRequest.SetRequestHeader("Content-Type", "application/json");
-
-        yield return getRequest.SendWebRequest();
-
-        if (getRequest.result != UnityWebRequest.Result.Success)
-        {
-            Debug.LogError("Failed to get user state: " + getRequest.error);
-            yield break;
-        }
-
-        string json = getRequest.downloadHandler.text;
-        Debug.Log("User State JSON: " + json);
-
-        UnityWebRequest postRequest = new UnityWebRequest(ApiConfig.GetFullUrl(ApiConfig.Endpoints.GenerateSchedule), "POST");
-        postRequest.uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(json));
-        postRequest.downloadHandler = new DownloadHandlerBuffer();
-        postRequest.SetRequestHeader("Content-Type", "application/json");
-        postRequest.timeout = 60;
-
-        yield return postRequest.SendWebRequest();
-
-        if (postRequest.result != UnityWebRequest.Result.Success)
-        {
-            Debug.LogError("Failed to get schedule: " + postRequest.error);
-            Debug.LogError("Response text: " + postRequest.downloadHandler.text);
-            yield break;
-        }
-        else
-        {
-            ScheduleResponse schedule = JsonUtility.FromJson<ScheduleResponse>(postRequest.downloadHandler.text);
-
-            // Save schedule locally after successful retrieval
-            var localSaver = FindObjectOfType<ScheduleLocalStorage>();
-            if (localSaver != null)
-            {
-                localSaver.SaveScheduleLocally(schedule);
-            }
-            else
-            {
-                Debug.LogWarning("⚠ ScheduleLocalStorage not found in scene. Skipping local save.");
-            }
-
-            System.Text.StringBuilder sb = new System.Text.StringBuilder();
-            sb.AppendLine($"Parsed Schedule for: {schedule.user_id}");
-            sb.AppendLine($"Total Sessions: {schedule.sessions.Count}");
-
-            foreach (var session in schedule.sessions)
-            {
-                if (session.task.title.ToLower().Contains("break") || session.task.category.ToLower().Contains("rest"))
-                    continue;
-                sb.AppendLine($"📝 Task: {session.task.title}");
-                sb.AppendLine($"📂 Category: {session.task.category}");
-                sb.AppendLine($"⏰ Start: {session.start_time}");
-                sb.AppendLine($"⏱ End: {session.end_time}");
-                sb.AppendLine($"☕ Break After: {session.break_after} minutes");
-                sb.AppendLine(); // extra line for spacing
-            }
-
-            if (schedule.warnings != null && schedule.warnings.Count > 0)
-            {
-                sb.AppendLine("\n⚠ Warnings:");
-                foreach (var warning in schedule.warnings)
-                {
-                    sb.AppendLine($"• {warning}");
-                }
-            }
-
-            if (outputText != null)
-            {
-                List<InferredTask> tasks;
-                string cleanedText = ResponseFormatter.CleanGPTResponse(sb.ToString(), out tasks);
-                outputText.text = "📅 AI-Generated Schedule:\n\n" + cleanedText;
-            }
-            else
-            {
-                Debug.LogWarning("⚠ outputText is null. UI not updated.");
-            }
-        }
+        StartCoroutine(GenerateScheduleFromLocalData(userId));
     }
 
     private StudyRequest BuildStudyRequestFromLocalDB(int userId)
@@ -212,49 +123,53 @@ public class ScheduleApiClient : MonoBehaviour
         };
     }
 
-    private IEnumerator RunScheduleRequest()
+    private IEnumerator GenerateScheduleFromLocalData(int userId)
     {
-        StudyRequest request = new StudyRequest
+        // Start loading indicator
+        Coroutine loadingAnimation = StartCoroutine(AnimateLoadingText("Asking the AI to build your schedule."));
+
+        // Build request from local db
+        StudyRequest requestPayload = BuildStudyRequestFromLocalDB(userId);
+        string jsonPayload = JsonUtility.ToJson(requestPayload);
+        Debug.Log($"Generated StudyRequest from local DB: {jsonPayload}");
+
+        // Send web request
+        string url = API_URL;
+        UnityWebRequest postRequest = new UnityWebRequest(url, "POST");
+        postRequest.uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(jsonPayload));
+        postRequest.downloadHandler = new DownloadHandlerBuffer();
+        postRequest.SetRequestHeader("Content-Type", "application/json");
+        postRequest.timeout = 60;
+        yield return postRequest.SendWebRequest();
+
+        // Stop loading indicator
+        StopCoroutine(loadingAnimation);
+
+        // Process response
+        if (postRequest.result != UnityWebRequest.Result.Success)
         {
-            user_id = "unity_test_user",
-            energy_level = new int[] { 3, 2 },
-            pomodoro_length = 25,
-            available_slots = new TimeSlotData[]
+            Debug.LogError($"Failed to get schedule: {postRequest.error}");
+            if (outputText != null)
             {
-                new TimeSlotData { start_time = DateTime.UtcNow.AddHours(1).ToString("o"), end_time = DateTime.UtcNow.AddHours(3).ToString("o") },
-                new TimeSlotData { start_time = DateTime.UtcNow.AddHours(4).ToString("o"), end_time = DateTime.UtcNow.AddHours(6).ToString("o") }
-            },
-            tasks = new TaskData[]
-            {
-                new TaskData { title = "Unity essay task", due_date = DateTime.UtcNow.AddDays(1).ToString("o"), duration_minutes = 60, category = "Unity" },
-                new TaskData { title = "Unity review notes", due_date = DateTime.UtcNow.AddDays(2).ToString("o"), duration_minutes = 45, category = "Math" }
+                outputText.text = "❌ Error: " + postRequest.error;
             }
-        };
-
-        string json = JsonUtility.ToJson(request, true);
-        UnityWebRequest www = new UnityWebRequest(API_URL, "POST");
-        www.timeout = 45; // Set a timeout for the request
-        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
-        www.uploadHandler = new UploadHandlerRaw(bodyRaw);
-        www.downloadHandler = new DownloadHandlerBuffer();
-        www.SetRequestHeader("Content-Type", "application/json");
-
-        Debug.Log("Sending POST request to: " + API_URL);
-        Debug.Log("Request JSON: " + json);
-        yield return www.SendWebRequest();
-
-        if (www.result != UnityWebRequest.Result.Success)
-        {
-            Debug.LogError("Error: " + www.error);
-            Debug.LogError("Response Text: " + www.downloadHandler.text);
         }
         else
         {
-            ScheduleResponse schedule = JsonUtility.FromJson<ScheduleResponse>(www.downloadHandler.text);
+            // Successfully received a response
+            ScheduleResponse schedule = JsonUtility.FromJson<ScheduleResponse>(postRequest.downloadHandler.text);
 
+            // Save schedule to the local database
+            var localSaver = FindObjectOfType<ScheduleLocalStorage>();
+            if (localSaver != null)
+            {
+                localSaver.SaveScheduleLocally(schedule);
+            }
+
+            // Format output
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
-            sb.AppendLine($"Parsed Schedule for: {schedule.user_id}");
             sb.AppendLine($"Total Sessions: {schedule.sessions.Count}");
+            sb.AppendLine();
 
             foreach (var session in schedule.sessions)
             {
@@ -278,16 +193,24 @@ public class ScheduleApiClient : MonoBehaviour
                 }
             }
 
+            // Update the UI with the final formatted text
             if (outputText != null)
             {
-                List<InferredTask> tasks;
-                string cleanedText = ResponseFormatter.CleanGPTResponse(sb.ToString(), out tasks);
-                outputText.text = "📅 AI-Generated Schedule:\n\n" + cleanedText;
+                outputText.text = "📅 AI-Generated Schedule:\n\n" + sb.ToString();
             }
-            else
-            {
-                Debug.LogWarning("⚠ outputText is null. UI not updated.");
-            }
+        }
+    }
+
+    private IEnumerator AnimateLoadingText(string message)
+    {
+        string baseMessage = message;
+        int dotCount = 0;
+        while (true)
+        {
+            dotCount = (dotCount + 1) % 4;
+            string dots = new string('.', dotCount);
+            if (outputText != null) outputText.text = baseMessage + dots;
+            yield return new WaitForSeconds(0.5f);
         }
     }
 }

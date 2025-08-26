@@ -23,8 +23,6 @@ public class LLMChatManager : MonoBehaviour
     public ApiRequestManager apiRequestManager;
     public int userId = 1;
 
-    private readonly string chatApiUrl = ApiConfig.GetFullUrl(ApiConfig.Endpoints.Chat);
-
     public void OnGenerateClicked()
     {
         string message = inputField.text.Trim();

@@ -22,7 +22,6 @@ public class LLMChatManager : MonoBehaviour
     public TMP_InputField inputField;
     public ApiRequestManager apiRequestManager;
     public int userId = 1;
-    public bool includeContext = true;
 
     private readonly string chatApiUrl = ApiConfig.GetFullUrl(ApiConfig.Endpoints.Chat);
 

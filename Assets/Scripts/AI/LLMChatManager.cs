@@ -53,32 +53,37 @@ public class LLMChatManager : MonoBehaviour
         try
         {
             ChatResponse response = JsonUtility.FromJson<ChatResponse>(jsonResponse);
+
             if (apiRequestManager.outputText != null && response.response != null && response.response.Length > 0)
             {
                 System.Text.StringBuilder sb = new System.Text.StringBuilder();
-                sb.AppendLine($"Total Sessions: {schedule.sessions.Count}");
+                sb.AppendLine($"Inferred Tasks: {response.response.Length}");
                 sb.AppendLine();
 
-                foreach (var session in schedule.sessions)
+                foreach (var inferredTask in response.response)
                 {
-                    if (session.task.title.ToLower().Contains("break") || session.task.category.ToLower().Contains("rest"))
-                        continue;
-
-                    sb.AppendLine($"📝 Task: {session.task.title}");
-                    sb.AppendLine($"📂 Category: {session.task.category}");
-                    sb.AppendLine($"⏰ Start: {session.start_time}");
-                    sb.AppendLine($"⏱ End: {session.end_time}");
-                    sb.AppendLine($"☕ Break After: {session.break_after} minutes");
-                    sb.AppendLine(); // extra line for spacing
+                    sb.AppendLine($"📝 Task: {inferredTask.task}");
+                    sb.AppendLine($"📂 Category: {inferredTask.category}");
+                    sb.AppendLine($"⏰ Start: {inferredTask.start}");
+                    sb.AppendLine($"⏱ End: {inferredTask.end}");
+                    sb.AppendLine(); 
                 }
                 
-                apiRequestManager.outputText.text = "📅 AI-Generated Schedule:\n\n" + sb.ToString();
+                apiRequestManager.outputText.text = "📅 From your chat, I inferred the following schedule:\n\n" + sb.ToString();
             }
-            // ... (handle other cases like no tasks returned) ...
+            else if (apiRequestManager.outputText != null)
+            {
+                // Handle cases where the AI responds but infers no tasks
+                apiRequestManager.outputText.text = "I can help with that! What would you like to schedule?";
+            }
         }
         catch (Exception e)
         {
-            // ... (handle JSON parsing errors) ...
+            Debug.LogError($"Error parsing chat response: {e.Message}");
+            if (apiRequestManager.outputText != null)
+            {
+                apiRequestManager.outputText.text = "❌ Sorry, I received a response I couldn't understand.";
+            }
         }
     }
 }

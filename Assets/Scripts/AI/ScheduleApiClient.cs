@@ -85,7 +85,41 @@ public class ScheduleApiClient : MonoBehaviour
         // Tell the central manager to send the request, and tell it which method to call on success.
         apiRequestManager.SendRequest(url, jsonPayload, OnScheduleSuccess);
     }
-    
+
+    // This method ONLY handles a successful response.
+    private void OnScheduleSuccess(string jsonResponse)
+    {
+        ScheduleResponse schedule = JsonUtility.FromJson<ScheduleResponse>(jsonResponse);
+
+        var localSaver = FindObjectOfType<ScheduleLocalStorage>();
+        if (localSaver != null)
+        {
+            localSaver.SaveScheduleLocally(schedule);
+        }
+
+        System.Text.StringBuilder sb = new System.Text.StringBuilder();
+        sb.AppendLine($"Total Sessions: {schedule.sessions.Count}");
+        sb.AppendLine();
+
+        foreach (var session in schedule.sessions)
+        {
+            if (session.task.title.ToLower().Contains("break") || session.task.category.ToLower().Contains("rest"))
+                continue;
+
+            sb.AppendLine($"📝 Task: {session.task.title}");
+            sb.AppendLine($"📂 Category: {session.task.category}");
+            sb.AppendLine($"⏰ Start: {session.start_time}");
+            sb.AppendLine($"⏱ End: {session.end_time}");
+            sb.AppendLine($"☕ Break After: {session.break_after} minutes");
+            sb.AppendLine(); // extra line for spacing
+        }
+
+        if (apiRequestManager.outputText != null)
+        {
+            apiRequestManager.outputText.text = "📅 AI-Generated Schedule:\n\n" + sb.ToString();
+        }
+    }
+
     public TextMeshProUGUI outputText;
     private readonly string API_URL = ApiConfig.GetFullUrl(ApiConfig.Endpoints.GenerateSchedule);
 

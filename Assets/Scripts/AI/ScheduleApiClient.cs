@@ -120,14 +120,6 @@ public class ScheduleApiClient : MonoBehaviour
         }
     }
 
-    public TextMeshProUGUI outputText;
-    private readonly string API_URL = ApiConfig.GetFullUrl(ApiConfig.Endpoints.GenerateSchedule);
-
-    public void RequestScheduleFromBackend(int userId)
-    {
-        StartCoroutine(GenerateScheduleFromLocalData(userId));
-    }
-
     private StudyRequest BuildStudyRequestFromLocalDB(int userId)
     {
         // Query UserSchedule.db for all non-completed tasks for the user

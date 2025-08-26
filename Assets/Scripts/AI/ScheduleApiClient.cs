@@ -70,7 +70,7 @@ public class ScheduleApiClient : MonoBehaviour
         // Build the specific request payload.
         StudyRequest requestPayload = BuildStudyRequestFromLocalDB(userId);
         string jsonPayload = JsonUtility.ToJson(requestPayload);
-        string url = ApiConfig.GetFullUrl(ApiConfig.Endpoints.GenerateSchedule);
+        string url = ApiConfig.GetFullUrl(ApiConfig.Endpoints.GenerateAiSchedule);
 
         // Tell the central manager to send the request, and tell it which method to call on success.
         apiRequestManager.SendRequest(url, jsonPayload, OnScheduleSuccess);

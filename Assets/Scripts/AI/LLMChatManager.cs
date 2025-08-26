@@ -1,10 +1,6 @@
 using System;
-using System.Collections;
 using UnityEngine;
-using UnityEngine.Networking;
 using TMPro;
-using static ResponseFormatter;
-using System.Collections.Generic;
 
 [Serializable]
 public class ChatPrompt

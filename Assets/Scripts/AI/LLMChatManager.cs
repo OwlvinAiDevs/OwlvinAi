@@ -7,7 +7,7 @@ public class ChatPrompt
 {
     public int user_id;
     public string message;
-    public bool include_context;
+    public string context;
 }
 
 [Serializable]

@@ -28,15 +28,22 @@ public class LLMChatManager : MonoBehaviour
         string message = inputField.text.Trim();
         if (!string.IsNullOrEmpty(message))
         {
-            StartCoroutine(SendChatPrompt(message));
+            // Build the specific request payload.
+            ChatPrompt prompt = new ChatPrompt
+            {
+                user_id = userId,
+                message = message,
+                context = "" // Build from local DB if needed
+            };
+            string jsonPayload = JsonUtility.ToJson(prompt);
+            string url = ApiConfig.GetFullUrl(ApiConfig.Endpoints.Chat);
+
+            // Tell the central manager to send the request.
+            apiRequestManager.SendRequest(url, jsonPayload, OnChatSuccess);
         }
         else
         {
-            Debug.LogWarning("Input field is empty.");
-            if (outputText != null)
-            {
-                outputText.text = "⚠ Please enter a message before submitting.";
-            }
+            // ... (handle empty input field) ...
         }
     }
 

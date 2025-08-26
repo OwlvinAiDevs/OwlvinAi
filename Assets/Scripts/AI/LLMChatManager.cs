@@ -1,17 +1,13 @@
 using System;
-using System.Collections;
 using UnityEngine;
-using UnityEngine.Networking;
 using TMPro;
-using static ResponseFormatter;
-using System.Collections.Generic;
 
 [Serializable]
 public class ChatPrompt
 {
     public int user_id;
     public string message;
-    public bool include_context;
+    public string context;
 }
 
 [Serializable]
@@ -24,95 +20,69 @@ public class LLMChatManager : MonoBehaviour
 {
     [Header("UI Elements")]
     public TMP_InputField inputField;
-    public TextMeshProUGUI outputText;
+    public ApiRequestManager apiRequestManager;
     public int userId = 1;
-    public bool includeContext = true;
-
-    private readonly string chatApiUrl = ApiConfig.GetFullUrl(ApiConfig.Endpoints.Chat);
 
     public void OnGenerateClicked()
     {
         string message = inputField.text.Trim();
         if (!string.IsNullOrEmpty(message))
         {
-            StartCoroutine(SendChatPrompt(message));
+            // Build the specific request payload.
+            ChatPrompt prompt = new ChatPrompt
+            {
+                user_id = userId,
+                message = message,
+                context = "" // Build from local DB if needed
+            };
+            string jsonPayload = JsonUtility.ToJson(prompt);
+            string url = ApiConfig.GetFullUrl(ApiConfig.Endpoints.Chat);
+
+            // Tell the central manager to send the request.
+            apiRequestManager.SendRequest(url, jsonPayload, OnChatSuccess);
         }
         else
         {
-            Debug.LogWarning("Input field is empty.");
-            if (outputText != null)
-            {
-                outputText.text = "⚠ Please enter a message before submitting.";
-            }
+            // ... (handle empty input field) ...
         }
     }
 
-    private IEnumerator SendChatPrompt(string userInput)
+    // This method ONLY handles a successful chat response.
+    private void OnChatSuccess(string jsonResponse)
     {
-        ChatPrompt prompt = new ChatPrompt
+        try
         {
-            user_id = userId,
-            message = userInput,
-            include_context = includeContext
-        };
+            ChatResponse response = JsonUtility.FromJson<ChatResponse>(jsonResponse);
 
-        string json = JsonUtility.ToJson(prompt);
-
-        UnityWebRequest request = new UnityWebRequest(chatApiUrl, "POST");
-        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
-        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-        request.downloadHandler = new DownloadHandlerBuffer();
-        request.SetRequestHeader("Content-Type", "application/json");
-        request.timeout = 60;
-
-        yield return request.SendWebRequest();
-
-        if (request.result != UnityWebRequest.Result.Success)
-        {
-            Debug.LogError("GPT request failed: " + request.error);
-            if (outputText != null)
+            if (apiRequestManager.outputText != null && response.response != null && response.response.Length > 0)
             {
-                outputText.text = "❌ Error: " + request.error;
+                System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                sb.AppendLine($"Inferred Tasks: {response.response.Length}");
+                sb.AppendLine();
+
+                foreach (var inferredTask in response.response)
+                {
+                    sb.AppendLine($"📝 Task: {inferredTask.task}");
+                    sb.AppendLine($"📂 Category: {inferredTask.category}");
+                    sb.AppendLine($"⏰ Start: {inferredTask.start}");
+                    sb.AppendLine($"⏱ End: {inferredTask.end}");
+                    sb.AppendLine(); 
+                }
+                
+                apiRequestManager.outputText.text = "📅 From your chat, I inferred the following schedule:\n\n" + sb.ToString();
+            }
+            else if (apiRequestManager.outputText != null)
+            {
+                // Handle cases where the AI responds but infers no tasks
+                apiRequestManager.outputText.text = "I can help with that! What would you like to schedule?";
             }
         }
-        else
+        catch (Exception e)
         {
-            string jsonResponse = request.downloadHandler.text;
-            Debug.Log("GPT response JSON: " + jsonResponse);
-
-            try
+            Debug.LogError($"Error parsing chat response: {e.Message}");
+            if (apiRequestManager.outputText != null)
             {
-                ChatResponse response = JsonUtility.FromJson<ChatResponse>(jsonResponse);
-                if (outputText != null && response.response != null && response.response.Length > 0)
-                {
-                    System.Text.StringBuilder sb = new System.Text.StringBuilder();
-
-                    foreach (var inferred in response.response)
-                    {
-                        if (inferred.task.ToLower().Contains("break") || inferred.category.ToLower().Contains("rest"))
-                            continue;
-
-                        sb.AppendLine($"📝 Task: {inferred.task}");
-                        sb.AppendLine($"📂 Category: {inferred.category}");
-                        sb.AppendLine($"⏰ Start: {inferred.start}");
-                        sb.AppendLine($"⏱ End: {inferred.end}");
-                        sb.AppendLine($"☕ Break After: 5 minutes\n");
-                    }
-
-                    outputText.text = "📅 AI-Generated Schedule:\n\n" + sb.ToString();
-                }
-                else
-                {
-                    outputText.text = "⚠ GPT returned no tasks.";
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogError("Failed to parse GPT response: " + e.Message);
-                if (outputText != null)
-                {
-                    outputText.text = "⚠ Failed to read GPT response.";
-                }
+                apiRequestManager.outputText.text = "❌ Sorry, I received a response I couldn't understand.";
             }
         }
     }

@@ -61,16 +61,6 @@ public class ScheduleResponse
     public List<string> warnings;
 }
 
-[Serializable]
-public class StudyRequestWrapper
-{
-    public string user_id;
-    public int[] energy_level;
-    public int pomodoro_length;
-    public TimeSlotData[] available_slots;
-    public TaskData[] tasks;
-}
-
 public class ScheduleApiClient : MonoBehaviour
 {
     public ApiRequestManager apiRequestManager;

@@ -20,7 +20,7 @@ public class LLMChatManager : MonoBehaviour
 {
     [Header("UI Elements")]
     public TMP_InputField inputField;
-    public TextMeshProUGUI outputText;
+    public ApiRequestManager apiRequestManager;
     public int userId = 1;
     public bool includeContext = true;
 

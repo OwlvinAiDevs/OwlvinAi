@@ -4,7 +4,7 @@ public static class ApiConfig
 
     public static class Endpoints
     {
-        public const string GenerateSchedule = "/generate_ai_schedule";
+        public const string GenerateAiSchedule = "/generate_ai_schedule";
         public const string Ping = "/ping";
         public const string GetUserState = "/user_state";
         public const string Chat = "/chat";

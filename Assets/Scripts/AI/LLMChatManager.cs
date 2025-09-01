@@ -23,6 +23,19 @@ public class LLMChatManager : MonoBehaviour
     public ApiRequestManager apiRequestManager;
     public int userId = 1;
 
+    // Save a chat log entry to the database
+    private void SaveChatLog(int userId, string role, string message)
+    {
+        var chatLog = new AIChatLog
+        {
+            user_id = userId,
+            timestamp = DateTime.UtcNow,
+            role = role,
+            message = message
+        };
+        DatabaseManager.db.Insert(chatLog);
+    }
+
     public void OnGenerateClicked()
     {
         string message = inputField.text.Trim();
@@ -40,6 +53,9 @@ public class LLMChatManager : MonoBehaviour
 
             // Tell the central manager to send the request.
             apiRequestManager.SendRequest(url, jsonPayload, OnChatSuccess);
+
+            // Save user message to ai_chat_logs
+            SaveChatLog(userId, "user", message);
         }
         else
         {
@@ -70,11 +86,17 @@ public class LLMChatManager : MonoBehaviour
                 }
                 
                 apiRequestManager.outputText.text = "📅 From your chat, I inferred the following schedule:\n\n" + sb.ToString();
+
+                // Save assistant response to ai_chat_logs
+                SaveChatLog(userId, "assistant", sb.ToString());
             }
             else if (apiRequestManager.outputText != null)
             {
                 // Handle cases where the AI responds but infers no tasks
                 apiRequestManager.outputText.text = "I can help with that! What would you like to schedule?";
+
+                // Save assistant response to ai_chat_logs
+                SaveChatLog(userId, "assistant", apiRequestManager.outputText.text);
             }
         }
         catch (Exception e)

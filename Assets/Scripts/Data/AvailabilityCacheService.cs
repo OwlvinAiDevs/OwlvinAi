@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 public static class AvailabilityCacheService
 {
     // Recalculate and cache available time slots for a user

@@ -53,12 +53,28 @@ public class LLMChatManager : MonoBehaviour
         string message = inputField.text.Trim();
         if (!string.IsNullOrEmpty(message))
         {
+            // Gather cached availability for the user for the next 7 days
+            DateTime now = DateTime.UtcNow;
+            DateTime future = now.AddDays(7);
+            var slots = DatabaseManager.db.Table<CachedAvailability>()
+                .Where(a => a.user_id == userId && a.start_time > now && a.end_time <= future)
+                .OrderBy(a => a.start_time)
+                .ToList();
+
+            // Format as context string
+            System.Text.StringBuilder contextBuilder = new System.Text.StringBuilder();
+            contextBuilder.AppendLine("Available time slots (next 7 days):");
+            foreach (var slot in slots)
+            {
+                contextBuilder.AppendLine($"- {slot.start_time:yyyy-MM-dd HH:mm} to {slot.end_time:yyyy-MM-dd HH:mm} (source: {slot.source})");
+            }
+
             // Build the specific request payload.
             ChatPrompt prompt = new ChatPrompt
             {
                 user_id = userId,
                 message = message,
-                context = "" // Build from local DB if needed
+                context = contextBuilder.ToString()
             };
             string jsonPayload = JsonUtility.ToJson(prompt);
             string url = ApiConfig.GetFullUrl(ApiConfig.Endpoints.Chat);

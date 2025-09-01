@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using OwlvinAi.Data.Models; // Adjust namespace if needed
-
 public static class AvailabilityCacheService
 {
     // Recalculate and cache available time slots for a user

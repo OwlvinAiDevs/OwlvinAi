@@ -36,6 +36,18 @@ public class LLMChatManager : MonoBehaviour
         DatabaseManager.db.Insert(chatLog);
     }
 
+    // Save an AI response to the database
+    private void SaveAIResponse(int userId, string responseJson)
+    {
+        var aiResponse = new AIResponse
+        {
+            user_id = userId,
+            timestamp = DateTime.UtcNow,
+            response_json = responseJson
+        };
+        DatabaseManager.db.Insert(aiResponse);
+    }
+
     public void OnGenerateClicked()
     {
         string message = inputField.text.Trim();
@@ -89,6 +101,9 @@ public class LLMChatManager : MonoBehaviour
 
                 // Save assistant response to ai_chat_logs
                 SaveChatLog(userId, "assistant", sb.ToString());
+
+                // Save full AI response JSON to ai_responses
+                SaveAIResponse(userId, jsonResponse);
             }
             else if (apiRequestManager.outputText != null)
             {
@@ -97,6 +112,9 @@ public class LLMChatManager : MonoBehaviour
 
                 // Save assistant response to ai_chat_logs
                 SaveChatLog(userId, "assistant", apiRequestManager.outputText.text);
+
+                // Save full AI response JSON to ai_responses
+                SaveAIResponse(userId, jsonResponse);
             }
         }
         catch (Exception e)

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 public class ScheduleLocalStorage : MonoBehaviour
@@ -10,6 +9,18 @@ public class ScheduleLocalStorage : MonoBehaviour
         if (DatabaseManager.db == null)
         {
             DatabaseManager.Init();  // Ensure the DB is initialized
+        }
+
+        // Attempt to get a userId for availability caching
+        int userId = 1; // TODO: Replace with actual user ID logic if available
+        try
+        {
+            AvailabilityCacheService.RecalculateAvailability(userId);
+            Debug.Log($"[Startup] Cached availability recalculated for user {userId}.");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[Startup] Could not recalculate cached availability: {ex.Message}");
         }
     }
 

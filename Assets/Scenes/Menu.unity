@@ -152,7 +152,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18f23c7088da63ab0b863006930aa15a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  clientSecretJson: {fileID: 4900000, guid: 95799c53dd544ea45a3d194e23e5dad9, type: 3}
+  clientSecretJson: {fileID: 4900000, guid: 4571034553f86afc9a2234c82746193c, type: 3}
 --- !u!4 &73037434
 Transform:
   m_ObjectHideFlags: 0
@@ -1479,7 +1479,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4400fa2a41743e14cac332d5598722cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  outputText: {fileID: 0}
+  apiRequestManager: {fileID: 0}
 --- !u!4 &1937370752
 Transform:
   m_ObjectHideFlags: 0

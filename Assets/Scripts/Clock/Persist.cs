@@ -5,7 +5,6 @@ public class PersistentTimer : MonoBehaviour
 {
     private static PersistentTimer instance;
     private CanvasGroup canvasGroup;
-
     void Awake()
     {
         if (instance == null)
@@ -23,7 +22,6 @@ public class PersistentTimer : MonoBehaviour
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-       
         if (scene.name == "Clock")
         {
             canvasGroup.alpha = 1; 

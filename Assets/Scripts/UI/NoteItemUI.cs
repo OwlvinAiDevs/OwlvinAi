@@ -1,15 +1,12 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-
 public class NoteItemUI : MonoBehaviour
 {
     public TextMeshProUGUI noteText;
     public Button deleteButton;
-
     private int noteId;
     private CalendarManager calendarManager;
-
     void Awake()
     {
         Debug.Log("--- Running Diagnostic on NoteItemUI for " + this.gameObject.name + " ---");
@@ -38,7 +35,6 @@ public class NoteItemUI : MonoBehaviour
         this.noteId = note.id;
         this.noteText.text = note.note_text;
         this.calendarManager = manager;
-
         deleteButton.onClick.RemoveAllListeners();
         deleteButton.onClick.AddListener(OnDeleteButtonClicked);
     }
